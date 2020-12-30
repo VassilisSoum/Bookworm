@@ -1,9 +1,9 @@
-package com.bookworm.application.integration
+package com.bookworm.application
 
 import cats.effect.{Blocker, ContextShift, IO}
-import com.bookworm.application.repository.RepositoryModule
-import com.bookworm.application.rest.RestModule
-import com.bookworm.application.service.ServiceModule
+import com.bookworm.application.books.repository.RepositoryModule
+import com.bookworm.application.books.rest.RestModule
+import com.bookworm.application.books.service.ServiceModule
 import com.dimafeng.testcontainers.{Container, DockerComposeContainer, ExposedService, ForAllTestContainer}
 import com.google.inject.{AbstractModule, Guice, Injector, TypeLiteral}
 import doobie.ExecutionContexts

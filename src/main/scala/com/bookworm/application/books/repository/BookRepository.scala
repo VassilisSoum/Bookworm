@@ -1,8 +1,8 @@
-package com.bookworm.application.repository
+package com.bookworm.application.books.repository
 
 import cats.effect.IO
-import com.bookworm.application.repository.dao.BookDao
-import com.bookworm.application.repository.model.Book
+import com.bookworm.application.books.repository.dao.BookDao
+import com.bookworm.application.books.repository.model.Book
 import doobie.Transactor
 import doobie.implicits._
 
@@ -12,7 +12,7 @@ trait BookRepository {
   def getBooks: IO[List[Book]]
 }
 
-private[repository] class BookRepositoryImpl @Inject() (bookDao: BookDao, transactor: Transactor[IO])
+private[repository] class BookRepositoryImpl @Inject()(bookDao: BookDao, transactor: Transactor[IO])
   extends BookRepository {
 
   override def getBooks: IO[List[Book]] =

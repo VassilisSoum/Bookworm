@@ -1,8 +1,8 @@
-package com.bookworm.application.rest
+package com.bookworm.application.books.rest
 
 import cats.effect.IO
-import com.bookworm.application.rest.dto.BookDto
-import com.bookworm.application.service.BookService
+import com.bookworm.application.books.rest.dto.BookDto
+import com.bookworm.application.books.service.BookService
 import org.http4s.HttpRoutes
 import org.http4s.circe.CirceEntityEncoder._
 import org.http4s.dsl.Http4sDsl

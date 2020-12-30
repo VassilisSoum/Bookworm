@@ -3,9 +3,9 @@ package com.bookworm.application.init
 import cats.effect.{Blocker, ConcurrentEffect, ContextShift, ExitCode, IO, Resource, Timer}
 import com.bookworm.application.config.Configuration
 import com.bookworm.application.config.Configuration.{Config, DatabaseConfig}
-import com.bookworm.application.repository.RepositoryModule
-import com.bookworm.application.rest.{BookRestApi, RestModule}
-import com.bookworm.application.service.ServiceModule
+import com.bookworm.application.books.repository.RepositoryModule
+import com.bookworm.application.books.rest.{BookRestApi, RestModule}
+import com.bookworm.application.books.service.ServiceModule
 import com.google.inject.{AbstractModule, Guice, TypeLiteral}
 import doobie.ExecutionContexts
 import doobie.hikari.HikariTransactor

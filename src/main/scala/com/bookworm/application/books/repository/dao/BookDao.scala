@@ -1,6 +1,6 @@
-package com.bookworm.application.repository.dao
+package com.bookworm.application.books.repository.dao
 
-import com.bookworm.application.repository.model.Book
+import com.bookworm.application.books.repository.model.Book
 import doobie._
 import doobie.implicits._
 

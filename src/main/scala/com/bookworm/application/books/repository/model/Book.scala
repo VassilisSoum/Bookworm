@@ -1,3 +1,3 @@
-package com.bookworm.application.repository.model
+package com.bookworm.application.books.repository.model
 
 case class Book(id: Long, title: String, summary: String)

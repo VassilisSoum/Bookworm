@@ -1,9 +1,10 @@
-package com.bookworm.application.integration
+package com.bookworm.application.integration.books
 
 import cats.effect.IO
-import com.bookworm.application.repository.model.Book
-import com.bookworm.application.rest.BookRestApi
-import com.bookworm.application.rest.dto.BookDto
+import com.bookworm.application.IntegrationTestModule
+import com.bookworm.application.books.repository.model.Book
+import com.bookworm.application.books.rest.BookRestApi
+import com.bookworm.application.books.rest.dto.BookDto
 import doobie.implicits._
 import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.implicits.{http4sKleisliResponseSyntaxOptionT, http4sLiteralsSyntax}

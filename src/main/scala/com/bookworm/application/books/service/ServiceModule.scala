@@ -1,4 +1,4 @@
-package com.bookworm.application.service
+package com.bookworm.application.books.service
 
 import com.google.inject.{AbstractModule, Scopes}
 import net.codingwell.scalaguice.ScalaModule

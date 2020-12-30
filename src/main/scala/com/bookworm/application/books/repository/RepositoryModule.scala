@@ -1,6 +1,6 @@
-package com.bookworm.application.repository
+package com.bookworm.application.books.repository
 
-import com.bookworm.application.repository.dao.{BookDao, BookDaoImpl}
+import com.bookworm.application.books.repository.dao.{BookDao, BookDaoImpl}
 import com.google.inject.{AbstractModule, Scopes}
 import net.codingwell.scalaguice.ScalaModule
 

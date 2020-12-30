@@ -1,6 +1,6 @@
-package com.bookworm.application.rest.dto
+package com.bookworm.application.books.rest.dto
 
-import com.bookworm.application.repository.model.Book
+import com.bookworm.application.books.repository.model.Book
 import io.circe.generic.semiauto._
 import io.circe.{Decoder, Encoder}
 

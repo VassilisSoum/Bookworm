@@ -1,8 +1,8 @@
-package com.bookworm.application.service
+package com.bookworm.application.books.service
 
 import cats.effect.IO
-import com.bookworm.application.repository.BookRepository
-import com.bookworm.application.repository.model.Book
+import com.bookworm.application.books.repository.BookRepository
+import com.bookworm.application.books.repository.model.Book
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.MustMatchers.convertToAnyMustWrapper
 import org.scalatest.{Matchers, WordSpec}
