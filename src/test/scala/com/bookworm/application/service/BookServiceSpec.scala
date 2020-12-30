@@ -7,7 +7,7 @@ import org.scalamock.scalatest.MockFactory
 import org.scalatest.MustMatchers.convertToAnyMustWrapper
 import org.scalatest.{Matchers, WordSpec}
 
-class BookServiceSpec extends WordSpec with Matchers with MockFactory  {
+class BookServiceSpec extends WordSpec with Matchers with MockFactory {
 
   val bookRepository: BookRepository = mock[BookRepository]
   val bookService: BookService = new BookServiceImpl(bookRepository)

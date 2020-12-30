@@ -12,9 +12,9 @@ trait BookRepository {
   def getBooks: IO[List[Book]]
 }
 
-private[repository] class BookRepositoryImpl @Inject() (bookDao: BookDao, transactor: Transactor[IO]) extends BookRepository {
+private[repository] class BookRepositoryImpl @Inject() (bookDao: BookDao, transactor: Transactor[IO])
+  extends BookRepository {
 
-  override def getBooks: IO[List[Book]] = {
-      bookDao.getAllBooks.transact(transactor)
-  }
+  override def getBooks: IO[List[Book]] =
+    bookDao.getAllBooks.transact(transactor)
 }

@@ -18,7 +18,7 @@ import org.http4s.server.middleware.Logger
 import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.global
 
-object BookwormServer /*extends RestModule*/ {
+object BookwormServer {
 
   def stream(implicit T: Timer[IO], CS: ContextShift[IO]): IO[ExitCode] =
     resources.use(create)
@@ -34,14 +34,20 @@ object BookwormServer /*extends RestModule*/ {
   private def create(
     resources: (HikariTransactor[IO], Config)
   )(implicit concurrentEffect: ConcurrentEffect[IO], timer: Timer[IO]): IO[ExitCode] = {
-    val injector = Guice.createInjector(new RestModule(), new ServiceModule(), new RepositoryModule(), new AbstractModule with ScalaModule {
-      override def configure(): Unit = {
-        bind(new TypeLiteral[HikariTransactor[IO]] {}).toInstance(resources._1)
+    val injector = Guice.createInjector(
+      new RestModule(),
+      new ServiceModule(),
+      new RepositoryModule(),
+      new AbstractModule with ScalaModule {
+        override def configure(): Unit =
+          bind(new TypeLiteral[HikariTransactor[IO]] {}).toInstance(resources._1)
       }
-    })
+    )
     for {
       _ <- initialize(resources._1)
-      httpApp = Logger.httpApp(logHeaders = true, logBody = true)(injector.getInstance(classOf[BookRestApi]).getAllBooks /*<+>*/ .orNotFound)
+      httpApp = Logger.httpApp(logHeaders = true, logBody = true)(
+        injector.getInstance(classOf[BookRestApi]).getAllBooks /*<+>*/ .orNotFound
+      )
       exitCode <- BlazeServerBuilder[IO](global)
         .bindHttp(resources._2.server.port, resources._2.server.host)
         .withHttpApp(httpApp)
@@ -66,7 +72,7 @@ object BookwormServer /*extends RestModule*/ {
       blocker
     )
 
-  private def initialize(transactor: HikariTransactor[IO]): IO[Unit] = {
+  private def initialize(transactor: HikariTransactor[IO]): IO[Unit] =
     transactor.configure { dataSource =>
       IO {
         val flyWay = Flyway.configure().dataSource(dataSource).load()
@@ -74,5 +80,4 @@ object BookwormServer /*extends RestModule*/ {
         ()
       }
     }
-  }
 }
