@@ -1,8 +1,8 @@
 package com.bookworm.application.books.service
 
 import cats.effect.IO
-import com.bookworm.application.books.repository.BookRepository
-import com.bookworm.application.books.repository.model.Book
+import com.bookworm.application.books.service.repository.BookRepository
+import com.bookworm.application.books.service.repository.model.Book
 
 import javax.inject.Inject
 

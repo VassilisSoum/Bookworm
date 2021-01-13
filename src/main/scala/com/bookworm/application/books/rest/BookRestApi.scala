@@ -1,7 +1,7 @@
 package com.bookworm.application.books.rest
 
 import cats.effect.IO
-import com.bookworm.application.books.rest.dto.BookDto
+import com.bookworm.application.books.rest.dto.BookResponseDto
 import com.bookworm.application.books.service.BookService
 import org.http4s.HttpRoutes
 import org.http4s.circe.CirceEntityEncoder._
@@ -14,7 +14,7 @@ class BookRestApi @Inject() (bookwormService: BookService) extends Http4sDsl[IO]
   def getAllBooks: HttpRoutes[IO] =
     HttpRoutes.of[IO] { case GET -> Root / "books" =>
       bookwormService.retrieveAllBooks.flatMap { books =>
-        Ok(books.map(BookDto.fromBook))
+        Ok(books.map(BookResponseDto.fromBook))
       }
     }
 }

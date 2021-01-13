@@ -1,7 +1,8 @@
 package com.bookworm.application
 
 import cats.effect.{Blocker, ContextShift, IO}
-import com.bookworm.application.books.repository.RepositoryModule
+import com.bookworm.application.books.dao.DaoModule
+import com.bookworm.application.books.service.repository.RepositoryModule
 import com.bookworm.application.books.rest.RestModule
 import com.bookworm.application.books.service.ServiceModule
 import com.dimafeng.testcontainers.{Container, DockerComposeContainer, ExposedService, ForAllTestContainer}
@@ -38,6 +39,7 @@ abstract class IntegrationTestModule extends WordSpec with Matchers with ForAllT
     new RestModule(),
     new ServiceModule(),
     new RepositoryModule(),
+    new DaoModule(),
     new AbstractModule with ScalaModule {
 
       override def configure(): Unit =
