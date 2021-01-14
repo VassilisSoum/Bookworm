@@ -2,18 +2,17 @@ package com.bookworm.application.integration.books
 
 import cats.effect.IO
 import com.bookworm.application.IntegrationTestModule
-import com.bookworm.application.books.dao.entity.{AuthorEntity, BookAuthorEntity, BookEntity}
-import com.bookworm.application.books.service.repository.model.{AuthorId, BookId}
 import com.bookworm.application.books.rest.BookRestApi
 import com.bookworm.application.books.rest.dto.{AuthorResponseDto, BookResponseDto}
+import com.bookworm.application.books.service.repository.model.{Author, AuthorId, Book, BookId}
 import doobie._
 import doobie.implicits._
+import doobie.postgres.implicits._
 import doobie.util.update.Update
 import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.implicits.{http4sKleisliResponseSyntaxOptionT, http4sLiteralsSyntax}
 import org.http4s.{Method, Request, Status}
 import org.scalatest.MustMatchers.convertToAnyMustWrapper
-import doobie.postgres.implicits._
 
 import java.util.UUID
 
@@ -27,9 +26,9 @@ class BookwormIntegrationTest extends IntegrationTestModule {
         val authorId2 = AuthorId(UUID.randomUUID())
         insertBooksAndAuthors(
           Map(
-            BookEntity(bookId.id, "Harry Potter", "Awesome summary", "isbn123") -> List(
-              AuthorEntity(authorId1.id, "John", "Black"),
-              AuthorEntity(authorId2.id, "Peter", "White")
+            Book(bookId, "Harry Potter", "Awesome summary", "isbn123") -> List(
+              Author(authorId1, "John", "Black"),
+              Author(authorId2, "Peter", "White")
             )
           )
         )
@@ -54,24 +53,22 @@ class BookwormIntegrationTest extends IntegrationTestModule {
     }
   }
 
-  private def insertBooksAndAuthors(authorsByBook: Map[BookEntity, List[AuthorEntity]]): Unit = {
-    def insertBookEntities(bookEntities: List[BookEntity]): ConnectionIO[Int] = {
+  private def insertBooksAndAuthors(authorsByBook: Map[Book, List[Author]]): Unit = {
+    def insertBookEntities(bookEntities: List[Book]): ConnectionIO[Int] = {
       val sqlStatement = "insert into bookworm.book(bookId,title,summary,isbn) values (?, ?, ?, ?)"
-      Update[BookEntity](sqlStatement).updateMany(bookEntities)
+      Update[Book](sqlStatement).updateMany(bookEntities)
     }
 
-    def insertAuthorEntities(authorEntities: List[AuthorEntity]): ConnectionIO[Int] = {
+    def insertAuthorEntities(authorEntities: List[Author]): ConnectionIO[Int] = {
       val sqlStatement = "insert into bookworm.author(authorId,firstName,lastName) values (?,?,?)"
-      Update[AuthorEntity](sqlStatement).updateMany(authorEntities)
+      Update[Author](sqlStatement).updateMany(authorEntities)
     }
 
-    def insertBookAuthorEntities(bookAuthorEntities: List[BookAuthorEntity]): ConnectionIO[Int] = {
+    def insertBookAuthorEntities(bookAuthorEntities: List[(BookId, AuthorId)]): ConnectionIO[Int] = {
       val sqlStatement = "insert into bookworm.book_author(bookId,authorId) values (?,?)"
 
       Update[(UUID, UUID)](sqlStatement).updateMany(
-        bookAuthorEntities.map(bookAuthorEntity =>
-          (bookAuthorEntity.bookEntity.bookId, bookAuthorEntity.authorEntity.authorId)
-        )
+        bookAuthorEntities.map(bookAuthorEntity => (bookAuthorEntity._1.id, bookAuthorEntity._2.id))
       )
     }
 
@@ -79,7 +76,7 @@ class BookwormIntegrationTest extends IntegrationTestModule {
       val transaction = for {
         _ <- insertBookEntities(List(entry._1))
         _ <- insertAuthorEntities(entry._2)
-        _ <- insertBookAuthorEntities(entry._2.map(authorEntity => BookAuthorEntity(entry._1, authorEntity)))
+        _ <- insertBookAuthorEntities(entry._2.map(author => (entry._1.bookId, author.authorId)))
       } yield ()
 
       transaction.transact(synchronousTransactor).unsafeRunSync()

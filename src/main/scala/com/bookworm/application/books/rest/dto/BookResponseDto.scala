@@ -1,6 +1,6 @@
 package com.bookworm.application.books.rest.dto
 
-import com.bookworm.application.books.service.repository.model.Book
+import com.bookworm.application.books.service.repository.model.{Author, Book}
 import io.circe.generic.semiauto._
 import io.circe.{Decoder, Encoder}
 
@@ -12,12 +12,14 @@ object BookResponseDto {
   implicit val encoder: Encoder[BookResponseDto] = deriveEncoder[BookResponseDto]
   implicit val decoder: Decoder[BookResponseDto] = deriveDecoder[BookResponseDto]
 
-  def fromBook(book: Book): BookResponseDto =
+  def from(bookAndAuthors: (Book, List[Author])): BookResponseDto =
     BookResponseDto(
-      book.bookId.id,
-      book.title,
-      book.summary,
-      book.isbn,
-      book.authors.map(author => AuthorResponseDto(author.authorId.id, author.firstName, author.lastName, List.empty))
+      bookAndAuthors._1.bookId.id,
+      bookAndAuthors._1.title,
+      bookAndAuthors._1.summary,
+      bookAndAuthors._1.isbn,
+      bookAndAuthors._2.map(author =>
+        AuthorResponseDto(author.authorId.id, author.firstName, author.lastName, List.empty)
+      )
     )
 }

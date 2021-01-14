@@ -15,24 +15,24 @@ class BookServiceSpec extends WordSpec with Matchers with MockFactory {
   val bookService: BookService = new BookServiceImpl(bookRepository)
 
   "BookService" should {
-    "return all books" in {
+    "return all books of a specific genre" in {
+      val genre = UUID.randomUUID()
       val expectedAuthors = List(
-        Author(AuthorId(UUID.randomUUID()), "John", "Black", List.empty),
-        Author(AuthorId(UUID.randomUUID()), "Peter", "White", List.empty)
+        Author(AuthorId(UUID.randomUUID()), "John", "Black"),
+        Author(AuthorId(UUID.randomUUID()), "Peter", "White")
       )
-      val expectedBooks = List(
+      val expectedBooks = Map(
         Book(
           bookId = BookId(UUID.randomUUID()),
           title = "Foo",
           summary = "Bar",
-          authors = expectedAuthors,
           isbn = "123"
-        )
+        ) -> expectedAuthors
       )
 
-      (() => bookRepository.getBooks).expects().returns(IO(expectedBooks))
+      (bookRepository.getBooksAndAuthorsForGenre _).expects(genre).returns(IO(expectedBooks))
 
-      val actualBooks = bookService.retrieveAllBooks
+      val actualBooks = bookService.retrieveAllBooks(genre)
 
       actualBooks.unsafeRunSync() mustBe expectedBooks
     }

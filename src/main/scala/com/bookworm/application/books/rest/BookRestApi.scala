@@ -12,9 +12,9 @@ import javax.inject.Inject
 class BookRestApi @Inject() (bookwormService: BookService) extends Http4sDsl[IO] {
 
   def getAllBooks: HttpRoutes[IO] =
-    HttpRoutes.of[IO] { case GET -> Root / "books" =>
-      bookwormService.retrieveAllBooks.flatMap { books =>
-        Ok(books.map(BookResponseDto.fromBook))
+    HttpRoutes.of[IO] { case GET -> Root / "genre" / UUIDVar(genreId) / "books" =>
+      bookwormService.retrieveAllBooks(genreId).flatMap { books =>
+        Ok(books.map(BookResponseDto.from))
       }
     }
 }

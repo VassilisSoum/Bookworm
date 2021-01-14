@@ -2,40 +2,31 @@ package com.bookworm.application.books.service.repository
 
 import cats.effect.IO
 import com.bookworm.application.books.dao.BookDao
-import com.bookworm.application.books.dao.entity.{AuthorEntity, BookAuthorEntity, BookEntity}
+import com.bookworm.application.books.dao.query.BookWithAuthor
 import com.bookworm.application.books.service.repository.model.{Author, AuthorId, Book, BookId}
 import doobie.Transactor
 import doobie.implicits._
 
+import java.util.UUID
 import javax.inject.Inject
 
 trait BookRepository {
-  def getBooks: IO[List[Book]]
+  def getBooksAndAuthorsForGenre(genreId: UUID): IO[Map[Book, List[Author]]]
 }
 
-private[repository] class BookRepositoryImpl @Inject()(bookDao: BookDao, transactor: Transactor[IO])
+private[repository] class BookRepositoryImpl @Inject() (bookDao: BookDao, transactor: Transactor[IO])
   extends BookRepository {
 
-  override def getBooks: IO[List[Book]] = {
-    def retrieveBooks: IO[List[BookAuthorEntity]] =
-      bookDao.getAllBooks.transact(transactor)
+  override def getBooksAndAuthorsForGenre(genreId: UUID): IO[Map[Book, List[Author]]] = {
+    def retrieveBooks: IO[List[BookWithAuthor]] =
+      bookDao.getAllBooks(genreId).transact(transactor)
 
-    def groupAuthorsByBook(books: List[BookAuthorEntity]): Map[BookEntity, List[AuthorEntity]] =
-      books.groupMap(_.bookEntity)(_.authorEntity)
-
-    def createBook(bookAuthors: (BookEntity, List[AuthorEntity])): Book =
-      Book(
-        BookId(bookAuthors._1.bookId),
-        bookAuthors._1.title,
-        bookAuthors._1.summary,
-        bookAuthors._2.map(authorEntity =>
-          Author(AuthorId(authorEntity.authorId), authorEntity.firstName, authorEntity.lastName, List.empty)
-        ),
-        bookAuthors._1.isbn
+    def groupAuthorsByBook(books: List[BookWithAuthor]): Map[Book, List[Author]] =
+      books.groupMap(key => Book(BookId(key.bookId), key.title, key.summary, key.isbn))(bookWithAuthor =>
+        Author(AuthorId(bookWithAuthor.authorId), bookWithAuthor.firstName, bookWithAuthor.lastName)
       )
 
     retrieveBooks
       .map(groupAuthorsByBook)
-      .map(_.map(createBook).toList)
   }
 }
