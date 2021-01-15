@@ -1,6 +1,7 @@
 package com.bookworm.application.books.rest.dto
 
-import com.bookworm.application.books.service.repository.model.{Author, Book}
+import com.bookworm.application.books.domain.{Author, Book}
+import com.bookworm.application.books.service.repository.model.Book
 import io.circe.generic.semiauto._
 import io.circe.{Decoder, Encoder}
 

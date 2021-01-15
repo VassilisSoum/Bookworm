@@ -3,7 +3,8 @@ package com.bookworm.application.books.service.repository
 import cats.effect.IO
 import com.bookworm.application.books.dao.BookDao
 import com.bookworm.application.books.dao.query.BookWithAuthor
-import com.bookworm.application.books.service.repository.model.{Author, AuthorId, Book, BookId}
+import com.bookworm.application.books.domain.{Author, AuthorId, Book, BookId}
+import com.bookworm.application.books.service.repository.model.BookId
 import doobie.Transactor
 import doobie.implicits._
 

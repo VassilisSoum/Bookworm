@@ -2,9 +2,10 @@ package com.bookworm.application.integration.books
 
 import cats.effect.IO
 import com.bookworm.application.IntegrationTestModule
+import com.bookworm.application.books.domain.{Author, AuthorId, Book, BookId}
 import com.bookworm.application.books.rest.BookRestApi
 import com.bookworm.application.books.rest.dto.{AuthorResponseDto, BookResponseDto}
-import com.bookworm.application.books.service.repository.model.{Author, AuthorId, Book, BookId}
+import com.bookworm.application.books.service.repository.model.BookId
 import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._

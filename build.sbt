@@ -16,6 +16,16 @@ lazy val root = (project in file("."))
     name := "bookworm",
     version := "0.0.1-SNAPSHOT",
     scalaVersion := "2.13.3",
+    scalacOptions ++= Seq(
+      "-encoding", "utf8",
+      "-Xfatal-warnings",
+      "-deprecation",
+      "-unchecked",
+      "-language:implicitConversions",
+      "-language:higherKinds",
+      "-language:existentials",
+      "-language:postfixOps"
+    ),
     libraryDependencies ++= Seq(
       "org.http4s" %% "http4s-blaze-server" % Http4sVersion,
       "org.http4s" %% "http4s-blaze-client" % Http4sVersion,
@@ -23,8 +33,6 @@ lazy val root = (project in file("."))
       "org.http4s" %% "http4s-dsl" % Http4sVersion,
       "io.circe" %% "circe-generic" % CirceVersion,
       "io.circe" %% "circe-literal" % CirceVersion,
-      "org.specs2" %% "specs2-core" % Specs2Version % Test,
-      "org.specs2" %% "specs2-cats" % Specs2Version % Test,
       "org.scalamock" %% "scalamock" % ScalaMockVersion % Test,
       "ch.qos.logback" % "logback-classic" % LogbackVersion,
       "org.tpolecat" %% "doobie-core" % DoobieVersion,

@@ -1,8 +1,9 @@
 package com.bookworm.application.books.service
 
 import cats.effect.IO
+import com.bookworm.application.books.domain.{Author, Book}
 import com.bookworm.application.books.service.repository.BookRepository
-import com.bookworm.application.books.service.repository.model.{Author, Book}
+import com.bookworm.application.books.service.repository.model.Book
 
 import java.util.UUID
 import javax.inject.Inject
