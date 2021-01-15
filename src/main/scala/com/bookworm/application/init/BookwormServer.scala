@@ -1,17 +1,17 @@
 package com.bookworm.application.init
 
 import cats.effect.{Blocker, ConcurrentEffect, ContextShift, ExitCode, IO, Resource, Timer}
+import com.bookworm.application.books.adapter.api.{BookRestApi, RestModule}
+import com.bookworm.application.books.adapter.repository.RepositoryModule
+import com.bookworm.application.books.adapter.service.ServiceModule
 import com.bookworm.application.config.Configuration
 import com.bookworm.application.config.Configuration.{Config, DatabaseConfig}
-import com.bookworm.application.books.service.repository.RepositoryModule
-import com.bookworm.application.books.rest.{BookRestApi, RestModule}
-import com.bookworm.application.books.service.ServiceModule
 import com.google.inject.{AbstractModule, Guice, TypeLiteral}
 import doobie.ExecutionContexts
 import doobie.hikari.HikariTransactor
 import net.codingwell.scalaguice.ScalaModule
 import org.flywaydb.core.Flyway
-import org.http4s.implicits._
+import org.http4s.implicits.http4sKleisliResponseSyntaxOptionT
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.Logger
 

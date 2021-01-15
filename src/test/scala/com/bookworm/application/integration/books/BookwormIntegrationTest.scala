@@ -2,9 +2,11 @@ package com.bookworm.application.integration.books
 
 import cats.effect.IO
 import com.bookworm.application.IntegrationTestModule
-import com.bookworm.application.books.domain.{Author, AuthorId, Book, BookId}
-import com.bookworm.application.books.rest.BookRestApi
-import com.bookworm.application.books.rest.dto.{AuthorResponseDto, BookResponseDto}
+import com.bookworm.application.books.adapter.api.BookRestApi
+import com.bookworm.application.books.adapter.api.dto.{AuthorResponseDto, BookResponseDto}
+import com.bookworm.application.books.domain.BookId
+import com.bookworm.application.books.domain.model.{Author, AuthorId, Book, BookId}
+import com.bookworm.application.books.rest.dto.BookResponseDto
 import com.bookworm.application.books.service.repository.model.BookId
 import doobie._
 import doobie.implicits._

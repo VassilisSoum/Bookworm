@@ -1,8 +1,8 @@
-package com.bookworm.application.books.dao.query
+package com.bookworm.application.books.domain.port.inbound.query
 
 import java.util.UUID
 
-case class BookWithAuthor(
+case class BookWithAuthorQuery(
     bookId: UUID,
     title: String,
     summary: String,

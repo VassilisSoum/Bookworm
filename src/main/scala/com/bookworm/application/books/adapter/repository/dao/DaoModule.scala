@@ -1,4 +1,4 @@
-package com.bookworm.application.books.dao
+package com.bookworm.application.books.adapter.repository.dao
 
 import com.google.inject.{AbstractModule, Scopes}
 

@@ -1,4 +1,4 @@
-package com.bookworm.application.books.domain
+package com.bookworm.application.books.domain.model
 
 sealed trait ValidationError
 

@@ -1,7 +1,9 @@
 package com.bookworm.application.books.service
 
 import cats.effect.IO
-import com.bookworm.application.books.domain.{Author, AuthorId, BookId}
+import com.bookworm.application.books.domain.BookId
+import com.bookworm.application.books.domain.model.{AuthorId, BookId}
+import com.bookworm.application.books.domain.port.inbound.{BookService, BookService}
 import com.bookworm.application.books.service.repository.BookRepository
 import com.bookworm.application.books.service.repository.model.BookId
 import org.scalamock.scalatest.MockFactory
@@ -13,7 +15,7 @@ import java.util.UUID
 class BookServiceSpec extends WordSpec with Matchers with MockFactory {
 
   val bookRepository: BookRepository = mock[BookRepository]
-  val bookService: BookService = new BookServiceImpl(bookRepository)
+  val bookService: BookService = new BookService(bookRepository)
 
   "BookService" should {
     "return all books of a specific genre" in {

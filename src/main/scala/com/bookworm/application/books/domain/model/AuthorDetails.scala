@@ -1,6 +1,6 @@
-package com.bookworm.application.books.domain
+package com.bookworm.application.books.domain.model
 
-sealed abstract case class AuthorFirstName private[AuthorFirstName] (firstName: String) {
+sealed abstract case class AuthorFirstName private[AuthorFirstName](firstName: String) {
 
   private def readResolve(): Object =
     AuthorFirstName.create(firstName)
@@ -14,7 +14,7 @@ object AuthorFirstName {
       Right(new AuthorFirstName(firstName) {})
 }
 
-sealed abstract case class AuthorLastName private[AuthorLastName] (lastName: String) {
+sealed abstract case class AuthorLastName private[AuthorLastName](lastName: String) {
 
   private def readResolve(): Object =
     AuthorLastName.create(lastName)
