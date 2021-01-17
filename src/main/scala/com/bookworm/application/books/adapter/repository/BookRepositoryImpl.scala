@@ -11,8 +11,7 @@ import doobie.implicits._
 
 import javax.inject.Inject
 
-class BookRepositoryImpl[F[_]: Sync] @Inject() (bookDao: BookDao, transactor: Transactor[F])
-  extends BookRepository[F] {
+class BookRepositoryImpl[F[_]: Sync] @Inject() (bookDao: BookDao, transactor: Transactor[F]) extends BookRepository[F] {
 
   override def getBooksAndAuthorsForGenre(genreId: GenreId): F[Map[BookId, List[BookWithAuthorQuery]]] = {
     def retrieveBooks: F[List[BookWithAuthorQuery]] =

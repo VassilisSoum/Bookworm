@@ -1,10 +1,6 @@
 package com.bookworm.application
 
-import cats.effect.{Blocker, ContextShift, IO}
-import com.bookworm.application.books.adapter.api.RestModule
-import com.bookworm.application.books.adapter.repository.RepositoryModule
-import com.bookworm.application.books.adapter.repository.dao.DaoModule
-import com.bookworm.application.books.adapter.service.ServiceModule
+/*import cats.effect.{Blocker, ContextShift, IO}
 import com.dimafeng.testcontainers.{Container, DockerComposeContainer, ExposedService, ForAllTestContainer}
 import com.google.inject.{AbstractModule, Guice, Injector, TypeLiteral}
 import doobie.ExecutionContexts
@@ -36,9 +32,9 @@ abstract class IntegrationTestModule extends WordSpec with Matchers with ForAllT
   )
 
   lazy val injector: Injector = Guice.createInjector(
-    new RestModule(),
-    new ServiceModule(),
-    new RepositoryModule(),
+    new RestModule[IO](),
+    new ServiceModule[IO](),
+    new RepositoryModule[IO](),
     new DaoModule(),
     new AbstractModule with ScalaModule {
 
@@ -60,4 +56,4 @@ abstract class IntegrationTestModule extends WordSpec with Matchers with ForAllT
         }
       }
       .unsafeRunSync()
-}
+}*/
