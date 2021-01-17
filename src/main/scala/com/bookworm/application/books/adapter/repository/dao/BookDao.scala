@@ -6,11 +6,13 @@ import doobie._
 import doobie.implicits._
 import doobie.postgres.implicits._
 
+import javax.inject.Inject
+
 trait BookDao {
   def getAllBooks(genreId: GenreId): ConnectionIO[List[BookWithAuthorQuery]]
 }
 
-private[dao] class BookDaoImpl extends BookDao {
+private[dao] class BookDaoImpl @Inject() () extends BookDao {
 
   override def getAllBooks(genreId: GenreId): doobie.ConnectionIO[List[BookWithAuthorQuery]] =
     sql"""select b.bookId, b.title, b.summary, b.isbn, b.genreId, a.authorId, a.firstName, a.lastName from bookworm.book b

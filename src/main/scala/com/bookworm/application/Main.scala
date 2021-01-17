@@ -6,5 +6,5 @@ import com.bookworm.application.init.BookwormServer
 object Main extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] =
-    BookwormServer.stream
+    BookwormServer.stream[IO].flatMap(_.compile.drain.as(ExitCode.Success))
 }
