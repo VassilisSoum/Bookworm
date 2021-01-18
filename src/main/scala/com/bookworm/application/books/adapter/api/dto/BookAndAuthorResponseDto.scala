@@ -11,7 +11,7 @@ case class BookAndAuthorResponseDto(
     title: String,
     summary: String,
     isbn: String,
-    genreId: UUID,
+    genre: String,
     authorId: UUID,
     firstName: String,
     lastName: String
@@ -30,7 +30,7 @@ object BookAndAuthorResponseDto {
         title = bookWithAuthorQuery.title,
         summary = bookWithAuthorQuery.summary,
         isbn = bookWithAuthorQuery.isbn,
-        genreId = bookWithAuthorQuery.genreId,
+        genre = bookWithAuthorQuery.genre,
         authorId = bookWithAuthorQuery.authorId,
         firstName = bookWithAuthorQuery.firstName,
         lastName = bookWithAuthorQuery.lastName

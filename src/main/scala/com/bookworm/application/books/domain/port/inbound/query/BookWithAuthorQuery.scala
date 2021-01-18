@@ -7,7 +7,7 @@ case class BookWithAuthorQuery(
     title: String,
     summary: String,
     isbn: String,
-    genreId: UUID,
+    genre: String,
     authorId: UUID,
     firstName: String,
     lastName: String
