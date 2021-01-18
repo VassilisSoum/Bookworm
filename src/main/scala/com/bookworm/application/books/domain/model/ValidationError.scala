@@ -8,4 +8,5 @@ object ValidationError {
   final case object EmptyBookIsbn extends ValidationError
   final case object EmptyAuthorFirstName extends ValidationError
   final case object EmptyAuthorLastName extends ValidationError
+  final case object EmptyGenreName extends ValidationError
 }

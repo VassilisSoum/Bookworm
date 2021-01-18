@@ -1,17 +1,28 @@
 package com.bookworm.application
 
-/*import cats.effect.{Blocker, ContextShift, IO}
+import cats.effect.{Blocker, ContextShift, IO, Sync}
+import com.bookworm.application.books.adapter.api.BookRestApi
+import com.bookworm.application.books.adapter.repository.BookRepositoryImpl
+import com.bookworm.application.books.adapter.repository.dao.BookDao
+import com.bookworm.application.books.adapter.service.BookServiceImpl
+import com.bookworm.application.books.domain.port.inbound.BookService
+import com.bookworm.application.books.domain.port.outbound.BookRepository
 import com.dimafeng.testcontainers.{Container, DockerComposeContainer, ExposedService, ForAllTestContainer}
-import com.google.inject.{AbstractModule, Guice, Injector, TypeLiteral}
+import com.google.inject._
 import doobie.ExecutionContexts
 import doobie.util.transactor.Transactor
 import net.codingwell.scalaguice.ScalaModule
 import org.flywaydb.core.Flyway
-import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpec}
+import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpec}
 
 import java.io.File
 
-abstract class IntegrationTestModule extends WordSpec with Matchers with ForAllTestContainer with BeforeAndAfterAll {
+abstract class IntegrationTestModule
+  extends WordSpec
+  with Matchers
+  with BeforeAndAfterAll
+  with ForAllTestContainer
+  with BeforeAndAfterEach {
 
   implicit private val contextShift: ContextShift[IO] = IO.contextShift(ExecutionContexts.synchronous)
 
@@ -32,14 +43,20 @@ abstract class IntegrationTestModule extends WordSpec with Matchers with ForAllT
   )
 
   lazy val injector: Injector = Guice.createInjector(
-    new RestModule[IO](),
-    new ServiceModule[IO](),
-    new RepositoryModule[IO](),
-    new DaoModule(),
     new AbstractModule with ScalaModule {
 
-      override def configure(): Unit =
+      override def configure(): Unit = {
+        bind(new TypeLiteral[Sync[IO]] {}).toInstance(implicitly[Sync[IO]])
+        bind(classOf[BookDao]).in(Scopes.SINGLETON)
         bind(new TypeLiteral[Transactor[IO]] {}).toInstance(synchronousTransactor)
+        bind(new TypeLiteral[BookRepository[IO]]() {})
+          .to(new TypeLiteral[BookRepositoryImpl[IO]]() {})
+          .in(Scopes.SINGLETON)
+        bind(new TypeLiteral[BookService[IO]]() {})
+          .to(new TypeLiteral[BookServiceImpl[IO]]() {})
+          .in(Scopes.SINGLETON)
+        bind(new TypeLiteral[BookRestApi[IO]] {}).in(Scopes.SINGLETON)
+      }
     }
   )
 
@@ -56,4 +73,4 @@ abstract class IntegrationTestModule extends WordSpec with Matchers with ForAllT
         }
       }
       .unsafeRunSync()
-}*/
+}

@@ -27,7 +27,7 @@ class BookServiceImplSpec extends WordSpec with Matchers with MockFactory {
             title = "Harry Potter",
             summary = "Awesome book",
             isbn = "ISBN123",
-            genreId = genreId.id,
+            genre = "Fantasy",
             authorId = UUID.randomUUID(),
             firstName = "John",
             lastName = "Black"

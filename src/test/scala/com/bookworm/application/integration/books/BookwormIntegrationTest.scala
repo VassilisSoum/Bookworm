@@ -1,84 +1,45 @@
 package com.bookworm.application.integration.books
 
-/*import cats.effect.IO
-import com.bookworm.application.IntegrationTestModule
+import cats.effect.IO
 import com.bookworm.application.books.adapter.api.BookRestApi
-import com.bookworm.application.books.domain.model.{Author, AuthorId, Book, BookId}
-import doobie._
-import doobie.implicits._
-import doobie.postgres.implicits._
-import doobie.util.update.Update
+import com.bookworm.application.books.adapter.api.dto.BookAndAuthorResponseDto
+import com.google.inject.Key
+import net.codingwell.scalaguice
 import org.http4s.circe.CirceEntityDecoder._
-import org.http4s.implicits.{http4sKleisliResponseSyntaxOptionT, http4sLiteralsSyntax}
-import org.http4s.{Method, Request, Status}
+import org.http4s.implicits.http4sKleisliResponseSyntaxOptionT
+import org.http4s.{Method, Request, Status, Uri}
 import org.scalatest.MustMatchers.convertToAnyMustWrapper
 
 import java.util.UUID
 
-class BookwormIntegrationTest extends IntegrationTestModule {
+class BookwormIntegrationTest extends TestData {
+
+  val endpoint = injector.getInstance(Key.get(scalaguice.typeLiteral[BookRestApi[IO]])).getAllBooks /*<+>*/ .orNotFound
 
   "Retrieving books" when {
-    "Calling /books" should {
-      "retrieve all books" in {
-        val bookId = BookId(UUID.randomUUID())
-        val authorId1 = AuthorId(UUID.randomUUID())
-        val authorId2 = AuthorId(UUID.randomUUID())
-        insertBooksAndAuthors(
+    "Calling /genre/{genreId}/books" should {
+      "retrieve all books for the specified genre" in {
+        val expectedBooks =
           Map(
-            Book(bookId, "Harry Potter", "Awesome summary", "isbn123") -> List(
-              Author(authorId1, "John", "Black"),
-              Author(authorId2, "Peter", "White")
+            testBookId.id -> List(
+              BookAndAuthorResponseDto(
+                bookId = testBookId.id,
+                title = testBookTitle.title,
+                summary = testBookSummary.summary,
+                isbn = testBookIsbn.isbn,
+                genre = testGenre.genreName.genre,
+                authorId = testAuthorId.id,
+                firstName = testAuthorFirstName.firstName,
+                lastName = testAuthorLastName.lastName
+              )
             )
           )
-        )
-
-        val expectedBooks = List(
-          BookResponseDto(
-            bookId.id,
-            "Harry Potter",
-            "Awesome summary",
-            "isbn123",
-            List(
-              AuthorResponseDto(authorId1.id, "John", "Black", List.empty),
-              AuthorResponseDto(authorId2.id, "Peter", "White", List.empty)
-            )
-          )
-        )
-        val request = Request[IO](Method.GET, uri"/books")
-        val actualBooks = injector.getInstance(classOf[BookRestApi]).getAllBooks.orNotFound(request).unsafeRunSync()
+        val request = Request[IO](Method.GET, Uri.unsafeFromString(s"/genre/${testGenreId.id.toString}/books"))
+        val actualBooks = endpoint(request)
+          .unsafeRunSync()
         actualBooks.status mustBe Status.Ok
-        actualBooks.as[List[BookResponseDto]].unsafeRunSync() mustBe expectedBooks
+        actualBooks.as[Map[UUID, List[BookAndAuthorResponseDto]]].unsafeRunSync() mustBe expectedBooks
       }
     }
   }
-
-  private def insertBooksAndAuthors(authorsByBook: Map[Book, List[Author]]): Unit = {
-    def insertBookEntities(bookEntities: List[Book]): ConnectionIO[Int] = {
-      val sqlStatement = "insert into bookworm.book(bookId,title,summary,isbn) values (?, ?, ?, ?)"
-      Update[Book](sqlStatement).updateMany(bookEntities)
-    }
-
-    def insertAuthorEntities(authorEntities: List[Author]): ConnectionIO[Int] = {
-      val sqlStatement = "insert into bookworm.author(authorId,firstName,lastName) values (?,?,?)"
-      Update[Author](sqlStatement).updateMany(authorEntities)
-    }
-
-    def insertBookAuthorEntities(bookAuthorEntities: List[(BookId, AuthorId)]): ConnectionIO[Int] = {
-      val sqlStatement = "insert into bookworm.book_author(bookId,authorId) values (?,?)"
-
-      Update[(UUID, UUID)](sqlStatement).updateMany(
-        bookAuthorEntities.map(bookAuthorEntity => (bookAuthorEntity._1.id, bookAuthorEntity._2.id))
-      )
-    }
-
-    authorsByBook.foreach { entry =>
-      val transaction = for {
-        _ <- insertBookEntities(List(entry._1))
-        _ <- insertAuthorEntities(entry._2)
-        _ <- insertBookAuthorEntities(entry._2.map(author => (entry._1.bookId, author.authorId)))
-      } yield ()
-
-      transaction.transact(synchronousTransactor).unsafeRunSync()
-    }
-  }
-}*/
+}
