@@ -6,12 +6,11 @@ import com.bookworm.application.books.domain.port.inbound.BookService
 import com.bookworm.application.books.domain.port.inbound.query.BookWithAuthorQuery
 import com.bookworm.application.books.domain.port.outbound.BookRepository
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.MustMatchers.convertToAnyMustWrapper
 import org.scalatest.{Matchers, WordSpec}
 
 import java.util.UUID
 
-class BookServiceImplSpec extends WordSpec with Matchers with MockFactory {
+class BookServiceImplTest extends WordSpec with Matchers with MockFactory {
 
   val bookRepository: BookRepository[IO] = mock[BookRepository[IO]]
   val bookService: BookService[IO] = new BookServiceImpl(bookRepository)
@@ -39,7 +38,7 @@ class BookServiceImplSpec extends WordSpec with Matchers with MockFactory {
 
       val actualBooks = bookService.retrieveAllBooksByGenre(genreId)
 
-      actualBooks.unsafeRunSync() mustBe expectedBooks
+      actualBooks.unsafeRunSync() shouldBe expectedBooks
     }
   }
 }
