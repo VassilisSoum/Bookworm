@@ -4,8 +4,11 @@ import com.bookworm.application.IntegrationTestModule
 import com.bookworm.application.books.domain.model._
 import doobie.ConnectionIO
 import doobie.implicits._
+import doobie.implicits.javasql._
 import doobie.postgres.implicits._
 
+import java.sql.Timestamp
+import java.time.LocalDateTime
 import java.util.UUID
 
 trait TestData extends IntegrationTestModule {
@@ -52,22 +55,31 @@ trait TestData extends IntegrationTestModule {
          values (${genre.genreId.id}, ${genre.genreName.genre})
          """.update.run
 
-  def insertIntoAuthor(author: Author): ConnectionIO[Int] =
-    sql"""insert into bookworm.author(authorId,firstName,lastName) 
+  def insertIntoAuthor(author: Author): ConnectionIO[Int] = {
+    val now: Timestamp = Timestamp.valueOf(LocalDateTime.now()) //TODO: Add a clock or zoneId here
+    sql"""insert into bookworm.author(authorId,firstName,lastName,createdAt,updatedAt)
          values (
-          ${author.authorId.id},${author.authorDetails.firstName.firstName},
-          ${author.authorDetails.lastName.lastName}
+          ${author.authorId.id},
+          ${author.authorDetails.firstName.firstName},
+          ${author.authorDetails.lastName.lastName},
+          $now,
+          $now
          )""".update.run
+  }
 
-  def insertIntoBook(book: Book): ConnectionIO[Int] =
-    sql"""insert into bookworm.book(bookId,title,summary,isbn,genreId) 
+  def insertIntoBook(book: Book): ConnectionIO[Int] = {
+    val now: Timestamp = Timestamp.valueOf(LocalDateTime.now()) //TODO: Add a clock or zoneId here
+    sql"""insert into bookworm.book(bookId,title,summary,isbn,genreId,createdAt,updatedAt)
          values (
           ${book.bookId.id},
           ${book.bookDetails.title.title},
           ${book.bookDetails.summary.summary},
           ${book.bookDetails.isbn.isbn},
-          ${book.bookDetails.genre.id}
+          ${book.bookDetails.genre.id},
+          $now,
+          $now
          )""".update.run
+  }
 
   def insertIntoBookAuthor(bookId: BookId, authorId: AuthorId): ConnectionIO[Int] =
     sql"""insert into bookworm.book_author(bookId,authorId) 
