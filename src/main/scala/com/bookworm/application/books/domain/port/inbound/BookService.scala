@@ -1,8 +1,8 @@
 package com.bookworm.application.books.domain.port.inbound
 
-import com.bookworm.application.books.domain.model.{BookId, GenreId}
-import com.bookworm.application.books.domain.port.inbound.query.BookWithAuthorQuery
+import com.bookworm.application.books.domain.model.{GenreId, PaginationInfo}
+import com.bookworm.application.books.domain.port.inbound.query.BooksByGenreQuery
 
 trait BookService[F[_]] {
-  def retrieveAllBooksByGenre(genre: GenreId): F[Map[BookId, List[BookWithAuthorQuery]]]
+  def retrieveBooksByGenre(genre: GenreId, paginationInfo: PaginationInfo): F[BooksByGenreQuery]
 }

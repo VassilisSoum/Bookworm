@@ -29,7 +29,7 @@ object Main extends IOApp {
           new Module(resources._1)
         )
         val httpApp = Logger.httpApp(logHeaders = true, logBody = true)(
-          injector.getInstance(Key.get(scalaguice.typeLiteral[BookRestApi[IO]])).getAllBooks /*<+>*/ .orNotFound
+          injector.getInstance(Key.get(scalaguice.typeLiteral[BookRestApi[IO]])).getBooks /*<+>*/ .orNotFound
         )
         for {
           _ <- BookwormServer.migrate(resources._1)
@@ -57,6 +57,7 @@ object Main extends IOApp {
         .to(new TypeLiteral[BookServiceImpl[IO]]() {})
         .in(Scopes.SINGLETON)
       bind(new TypeLiteral[BookRestApi[IO]] {}).in(Scopes.SINGLETON)
+      bind(classOf[java.time.Clock]).toInstance(java.time.Clock.systemUTC())
     }
   }
 }

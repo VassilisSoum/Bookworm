@@ -9,4 +9,8 @@ object ValidationError {
   final case object EmptyAuthorFirstName extends ValidationError
   final case object EmptyAuthorLastName extends ValidationError
   final case object EmptyGenreName extends ValidationError
+  final case object EmptyContinuationToken extends ValidationError
+  final case object InvalidContinuationTokenFormat extends ValidationError
+  final case object NonPositivePaginationLimit extends ValidationError
+  final case object PaginationLimitExceedsMaximum extends ValidationError
 }

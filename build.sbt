@@ -1,5 +1,4 @@
 val Http4sVersion = "0.21.11"
-val CirceVersion = "0.13.0"
 val Specs2Version = "4.10.5"
 val LogbackVersion = "1.2.3"
 val MacwireVersion = "2.3.7"
@@ -17,7 +16,8 @@ lazy val root = (project in file("."))
     version := "0.0.1-SNAPSHOT",
     scalaVersion := "2.13.3",
     scalacOptions ++= Seq(
-      "-encoding", "utf8",
+      "-encoding",
+      "utf8",
       "-Xfatal-warnings",
       "-deprecation",
       "-unchecked",
@@ -29,10 +29,8 @@ lazy val root = (project in file("."))
     libraryDependencies ++= Seq(
       "org.http4s" %% "http4s-blaze-server" % Http4sVersion,
       "org.http4s" %% "http4s-blaze-client" % Http4sVersion,
-      "org.http4s" %% "http4s-circe" % Http4sVersion,
       "org.http4s" %% "http4s-dsl" % Http4sVersion,
-      "io.circe" %% "circe-generic" % CirceVersion,
-      "io.circe" %% "circe-literal" % CirceVersion,
+      "org.http4s" %% "http4s-json4s-jackson" % Http4sVersion,
       "org.scalamock" %% "scalamock" % ScalaMockVersion % Test,
       "ch.qos.logback" % "logback-classic" % LogbackVersion,
       "org.tpolecat" %% "doobie-core" % DoobieVersion,
@@ -46,7 +44,6 @@ lazy val root = (project in file("."))
       "com.dimafeng" %% "testcontainers-scala-scalatest" % TestContainersVersion % Test,
       "com.dimafeng" %% "testcontainers-scala-postgresql" % TestContainersVersion % Test,
       "org.scalatest" %% "scalatest" % "3.0.8" % Test
-
     ),
     addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3"),
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")

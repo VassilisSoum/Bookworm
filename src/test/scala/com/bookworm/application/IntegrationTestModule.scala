@@ -7,6 +7,7 @@ import com.bookworm.application.books.adapter.repository.dao.BookDao
 import com.bookworm.application.books.adapter.service.BookServiceImpl
 import com.bookworm.application.books.domain.port.inbound.BookService
 import com.bookworm.application.books.domain.port.outbound.BookRepository
+import com.bookworm.application.integration.FakeClock
 import com.dimafeng.testcontainers.{Container, DockerComposeContainer, ExposedService, ForAllTestContainer}
 import com.google.inject._
 import doobie.ExecutionContexts
@@ -42,6 +43,8 @@ abstract class IntegrationTestModule
     Blocker.liftExecutionContext(ExecutionContexts.synchronous)
   )
 
+  val fakeClock: FakeClock = new FakeClock
+
   lazy val injector: Injector = Guice.createInjector(
     new AbstractModule with ScalaModule {
 
@@ -56,6 +59,7 @@ abstract class IntegrationTestModule
           .to(new TypeLiteral[BookServiceImpl[IO]]() {})
           .in(Scopes.SINGLETON)
         bind(new TypeLiteral[BookRestApi[IO]] {}).in(Scopes.SINGLETON)
+        bind(classOf[java.time.Clock]).toInstance(fakeClock)
       }
     }
   )

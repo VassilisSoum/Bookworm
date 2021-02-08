@@ -1,8 +1,10 @@
 package com.bookworm.application.integration.books
 
+import cats.free.Free
 import com.bookworm.application.IntegrationTestModule
 import com.bookworm.application.books.domain.model._
 import doobie.ConnectionIO
+import doobie.free.connection
 import doobie.implicits._
 import doobie.implicits.javasql._
 import doobie.postgres.implicits._
@@ -26,18 +28,6 @@ trait TestData extends IntegrationTestModule {
   val testAuthorLastName: AuthorLastName = AuthorLastName.create("TestAuthorLastName").toOption.get
   val testAuthor: Author = Author(testAuthorId, AuthorDetails(testAuthorFirstName, testAuthorLastName))
 
-  override def beforeAll(): Unit = {
-    val transaction = for {
-      _ <- insertIntoGenre(testGenre)
-      _ <- insertIntoAuthor(testAuthor)
-      _ <- insertIntoBook(testBook)
-      _ <- insertIntoBookAuthor(testBookId, testAuthorId)
-    } yield ()
-
-    transaction.transact(this.synchronousTransactor).unsafeRunSync()
-    super.beforeAll()
-  }
-
   override def afterAll(): Unit = {
     val transaction = for {
       _ <- sql"""truncate table bookworm.author CASCADE""".update.run
@@ -56,7 +46,7 @@ trait TestData extends IntegrationTestModule {
          """.update.run
 
   def insertIntoAuthor(author: Author): ConnectionIO[Int] = {
-    val now: Timestamp = Timestamp.valueOf(LocalDateTime.now()) //TODO: Add a clock or zoneId here
+    val now: Timestamp = Timestamp.valueOf(LocalDateTime.now(fakeClock))
     sql"""insert into bookworm.author(authorId,firstName,lastName,createdAt,updatedAt)
          values (
           ${author.authorId.id},
@@ -67,8 +57,8 @@ trait TestData extends IntegrationTestModule {
          )""".update.run
   }
 
-  def insertIntoBook(book: Book): ConnectionIO[Int] = {
-    val now: Timestamp = Timestamp.valueOf(LocalDateTime.now()) //TODO: Add a clock or zoneId here
+  def insertIntoBook(book: Book): ConnectionIO[Long] = {
+    val now: Timestamp = Timestamp.valueOf(LocalDateTime.now(fakeClock))
     sql"""insert into bookworm.book(bookId,title,summary,isbn,genreId,createdAt,updatedAt)
          values (
           ${book.bookId.id},
@@ -78,11 +68,25 @@ trait TestData extends IntegrationTestModule {
           ${book.bookDetails.genre.id},
           $now,
           $now
-         )""".update.run
+         )""".update.withUniqueGeneratedKeys("id")
   }
 
   def insertIntoBookAuthor(bookId: BookId, authorId: AuthorId): ConnectionIO[Int] =
     sql"""insert into bookworm.book_author(bookId,authorId) 
          values (${bookId.id},${authorId.id})
          """.update.run
+
+  def setupInitialData(): Unit = {
+    val transaction: Free[connection.ConnectionOp, Unit] = for {
+      _ <- insertIntoGenre(testGenre)
+      _ <- insertIntoAuthor(testAuthor)
+      _ <- insertIntoBook(testBook)
+      _ <- insertIntoBookAuthor(testBookId, testAuthorId)
+    } yield ()
+
+    transaction.transact(this.synchronousTransactor).unsafeRunSync()
+  }
+
+  def runInTransaction[A](transaction: Free[connection.ConnectionOp, A]): A =
+    transaction.transact(this.synchronousTransactor).unsafeRunSync()
 }
