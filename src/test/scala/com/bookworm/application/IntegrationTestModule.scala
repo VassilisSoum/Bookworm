@@ -22,8 +22,8 @@ abstract class IntegrationTestModule
   extends WordSpec
   with Matchers
   with BeforeAndAfterAll
-  with ForAllTestContainer
-  with BeforeAndAfterEach {
+  with BeforeAndAfterEach
+  with ForAllTestContainer {
 
   implicit private val contextShift: ContextShift[IO] = IO.contextShift(ExecutionContexts.synchronous)
 

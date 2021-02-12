@@ -13,7 +13,7 @@ import org.scalatest.MustMatchers.convertToAnyMustWrapper
 
 import java.time.LocalDateTime
 
-class BookwormIntegrationTest extends TestData {
+class RetrieveBooksWithoutPaginationIntegrationTest extends TestData {
 
   implicit val validationErrorDtoEntityDecoder: EntityDecoder[IO, ValidationErrorDto] = jsonOf
   implicit val getBooksResponseEntityDecoder: EntityDecoder[IO, GetBooksResponseDto] = jsonOf

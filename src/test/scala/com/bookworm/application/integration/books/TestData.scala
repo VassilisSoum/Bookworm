@@ -10,7 +10,7 @@ import doobie.implicits.javasql._
 import doobie.postgres.implicits._
 
 import java.sql.Timestamp
-import java.time.LocalDateTime
+import java.time.{Instant, LocalDateTime}
 import java.util.UUID
 
 trait TestData extends IntegrationTestModule {
@@ -89,4 +89,12 @@ trait TestData extends IntegrationTestModule {
 
   def runInTransaction[A](transaction: Free[connection.ConnectionOp, A]): A =
     transaction.transact(this.synchronousTransactor).unsafeRunSync()
+
+  def advanceClockInMillis(value: Long): Instant = {
+    fakeClock.current = fakeClock.current.plusMillis(value)
+    fakeClock.current
+  }
+
+  def setClockAt(value: Instant): Unit =
+    fakeClock.current = value
 }

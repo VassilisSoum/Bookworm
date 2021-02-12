@@ -18,7 +18,7 @@ class BookServiceImpl[F[_]: Sync] @Inject() (bookRepository: BookRepository[F]) 
     paginationInfo: PaginationInfo
   ): F[BooksByGenreQuery] =
     bookRepository.getBooksForGenre(genre, paginationInfo).flatMap { booksByGenre =>
-      booksByGenre.headOption match {
+      booksByGenre.lastOption match {
         case Some(bookByGenre) =>
           tryCreateContinuationToken(bookByGenre) match {
             case Success(continuationToken) =>
