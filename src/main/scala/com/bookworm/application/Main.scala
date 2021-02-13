@@ -2,9 +2,9 @@ package com.bookworm.application
 
 import cats.effect.{ExitCode, IO, IOApp}
 import com.bookworm.application.books.adapter.api.BookRestApi
-import com.bookworm.application.books.adapter.repository.BookRepositoryImpl
+import com.bookworm.application.books.adapter.repository.{BookRepositoryImpl, BookRepositoryModule}
 import com.bookworm.application.books.adapter.repository.dao.BookDao
-import com.bookworm.application.books.adapter.service.BookServiceImpl
+import com.bookworm.application.books.adapter.service.{BookServiceImpl, BookServiceModule}
 import com.bookworm.application.books.domain.port.inbound.BookService
 import com.bookworm.application.books.domain.port.outbound.BookRepository
 import com.bookworm.application.init.BookwormServer
@@ -26,7 +26,9 @@ object Main extends IOApp {
       .createTransactor[IO]
       .use { resources =>
         val injector = Guice.createInjector(
-          new Module(resources._1)
+          new Module(resources._1),
+          new BookServiceModule[IO],
+          new BookRepositoryModule[IO]
         )
         val httpApp = Logger.httpApp(logHeaders = true, logBody = true)(
           injector.getInstance(Key.get(scalaguice.typeLiteral[BookRestApi[IO]])).getBooks /*<+>*/ .orNotFound
@@ -50,12 +52,6 @@ object Main extends IOApp {
       bind(new TypeLiteral[Sync[IO]] {}).toInstance(implicitly[Sync[IO]])
       bind(classOf[BookDao]).in(Scopes.SINGLETON)
       bind(new TypeLiteral[Transactor[IO]] {}).toInstance(transactor)
-      bind(new TypeLiteral[BookRepository[IO]]() {})
-        .to(new TypeLiteral[BookRepositoryImpl[IO]]() {})
-        .in(Scopes.SINGLETON)
-      bind(new TypeLiteral[BookService[IO]]() {})
-        .to(new TypeLiteral[BookServiceImpl[IO]]() {})
-        .in(Scopes.SINGLETON)
       bind(new TypeLiteral[BookRestApi[IO]] {}).in(Scopes.SINGLETON)
       bind(classOf[java.time.Clock]).toInstance(java.time.Clock.systemUTC())
     }

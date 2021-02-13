@@ -13,8 +13,8 @@ import doobie.implicits._
 import javax.inject.Inject
 import scala.util.{Failure, Success, Try}
 
-//TODO: Create guice module and make this class package private to use only trait
-class BookRepositoryImpl[F[_]: Sync] @Inject() (bookDao: BookDao, transactor: Transactor[F]) extends BookRepository[F] {
+private[repository] class BookRepositoryImpl[F[_]: Sync] @Inject() (bookDao: BookDao, transactor: Transactor[F])
+  extends BookRepository[F] {
 
   override def getBooksForGenre(
     genreId: GenreId,

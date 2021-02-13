@@ -8,7 +8,8 @@ import com.bookworm.application.books.domain.port.outbound.BookRepository
 
 import javax.inject.Inject
 
-class BookServiceImpl[F[_]: Sync] @Inject() (bookRepository: BookRepository[F]) extends BookService[F] {
+private[service] class BookServiceImpl[F[_]: Sync] @Inject() (bookRepository: BookRepository[F])
+  extends BookService[F] {
 
   def retrieveBooksByGenre(
     genre: GenreId,
