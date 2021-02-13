@@ -1,29 +1,20 @@
 package com.bookworm.application.books.adapter.api.dto
 
+import com.bookworm.application.books.adapter.api.formats
 import com.bookworm.application.books.domain.model.ValidationError
 import com.bookworm.application.books.domain.model.ValidationError._
 import org.json4s.JsonAST.JString
 import org.json4s.{CustomSerializer, _}
 
-sealed trait ValidationErrorType
+case class ValidationErrorDto(errorType: ValidationError, message: String)
 
-object ValidationErrorType {
-  final case object EmptyBookTitle extends ValidationErrorType
-  final case object EmptyBookSummary extends ValidationErrorType
-  final case object EmptyBookIsbn extends ValidationErrorType
-  final case object EmptyAuthorFirstName extends ValidationErrorType
-  final case object EmptyAuthorLastName extends ValidationErrorType
-  final case object EmptyGenreName extends ValidationErrorType
-  final case object EmptyContinuationToken extends ValidationErrorType
-  final case object InvalidContinuationTokenFormat extends ValidationErrorType
-  final case object NonPositivePaginationLimit extends ValidationErrorType
-  final case object PaginationLimitExceedsMaximum extends ValidationErrorType
+object ValidationErrorDto {
 
-  final case object ValidationErrorTypeSerializer
-    extends CustomSerializer[ValidationErrorType](_ =>
+  final case object ValidationErrorSerializer
+    extends CustomSerializer[ValidationError](_ =>
       (
-        { case JString(validationErrorType) =>
-          validationErrorType match {
+        { case JString(validationError) =>
+          validationError match {
             case "EmptyBookTitle"                 => EmptyBookTitle
             case "EmptyBookSummary"               => EmptyBookSummary
             case "EmptyBookIsbn"                  => EmptyBookIsbn
@@ -36,18 +27,11 @@ object ValidationErrorType {
             case "PaginationLimitExceedsMaximum"  => PaginationLimitExceedsMaximum
           }
         },
-        { case validationErrorType: ValidationErrorType =>
-          JString(validationErrorType.toString)
+        { case validationError: ValidationError =>
+          JString(validationError.toString)
         }
       )
     )
-}
-
-case class ValidationErrorDto(errorType: ValidationErrorType, message: String)
-
-object ValidationErrorDto {
-
-  implicit val formats = DefaultFormats + ValidationErrorType.ValidationErrorTypeSerializer
 
   implicit val validationErrorDtoWriter: JsonFormat[ValidationErrorDto] = new JsonFormat[ValidationErrorDto] {
 
@@ -58,39 +42,36 @@ object ValidationErrorDto {
       value.extract[ValidationErrorDto]
   }
 
-  implicit class ValidationErrorDtoOps(validationError: ValidationError) {
-
-    def fromDomain: ValidationErrorDto =
-      validationError match {
-        case EmptyBookTitle =>
-          ValidationErrorDto(ValidationErrorType.EmptyBookTitle, "Book title cannot be empty")
-        case EmptyBookSummary =>
-          ValidationErrorDto(ValidationErrorType.EmptyBookSummary, "Book summary cannot be empty")
-        case EmptyBookIsbn =>
-          ValidationErrorDto(ValidationErrorType.EmptyBookIsbn, "Book isbn cannot be empty")
-        case EmptyAuthorFirstName =>
-          ValidationErrorDto(ValidationErrorType.EmptyAuthorFirstName, "Author first name cannot be empty")
-        case EmptyAuthorLastName =>
-          ValidationErrorDto(ValidationErrorType.EmptyAuthorLastName, "Author last name cannot be empty")
-        case EmptyGenreName =>
-          ValidationErrorDto(ValidationErrorType.EmptyGenreName, "Genre name cannot be empty")
-        case EmptyContinuationToken =>
-          ValidationErrorDto(
-            ValidationErrorType.EmptyContinuationToken,
-            "Continuation pagination token cannot be empty"
-          )
-        case InvalidContinuationTokenFormat =>
-          ValidationErrorDto(ValidationErrorType.InvalidContinuationTokenFormat, "Continuation token format is invalid")
-        case NonPositivePaginationLimit =>
-          ValidationErrorDto(
-            ValidationErrorType.NonPositivePaginationLimit,
-            "Pagination limit must be a positive number"
-          )
-        case PaginationLimitExceedsMaximum =>
-          ValidationErrorDto(
-            ValidationErrorType.PaginationLimitExceedsMaximum,
-            "Pagination limit is too large"
-          )
-      }
-  }
+  def fromDomain(validationError: ValidationError): ValidationErrorDto =
+    validationError match {
+      case EmptyBookTitle =>
+        ValidationErrorDto(ValidationError.EmptyBookTitle, "Book title cannot be empty")
+      case EmptyBookSummary =>
+        ValidationErrorDto(ValidationError.EmptyBookSummary, "Book summary cannot be empty")
+      case EmptyBookIsbn =>
+        ValidationErrorDto(ValidationError.EmptyBookIsbn, "Book isbn cannot be empty")
+      case EmptyAuthorFirstName =>
+        ValidationErrorDto(ValidationError.EmptyAuthorFirstName, "Author first name cannot be empty")
+      case EmptyAuthorLastName =>
+        ValidationErrorDto(ValidationError.EmptyAuthorLastName, "Author last name cannot be empty")
+      case EmptyGenreName =>
+        ValidationErrorDto(ValidationError.EmptyGenreName, "Genre name cannot be empty")
+      case EmptyContinuationToken =>
+        ValidationErrorDto(
+          ValidationError.EmptyContinuationToken,
+          "Continuation pagination token cannot be empty"
+        )
+      case InvalidContinuationTokenFormat =>
+        ValidationErrorDto(ValidationError.InvalidContinuationTokenFormat, "Continuation token format is invalid")
+      case NonPositivePaginationLimit =>
+        ValidationErrorDto(
+          ValidationError.NonPositivePaginationLimit,
+          "Pagination limit must be a positive number"
+        )
+      case PaginationLimitExceedsMaximum =>
+        ValidationErrorDto(
+          ValidationError.PaginationLimitExceedsMaximum,
+          "Pagination limit is too large"
+        )
+    }
 }

@@ -1,6 +1,6 @@
 package com.bookworm.application.books.domain.model
 
-sealed trait ValidationError
+sealed trait ValidationError extends Product with Serializable
 
 object ValidationError {
   final case object EmptyBookTitle extends ValidationError

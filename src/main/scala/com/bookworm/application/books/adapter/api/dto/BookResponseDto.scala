@@ -1,5 +1,6 @@
 package com.bookworm.application.books.adapter.api.dto
 
+import com.bookworm.application.books.adapter.api.formats
 import com.bookworm.application.books.domain.port.inbound.query.BookQueryModel
 import org.json4s._
 
@@ -12,8 +13,6 @@ final case class BookResponseDto(
 )
 
 object BookResponseDto {
-
-  implicit val formats = DefaultFormats
 
   implicit val bookResponseDtoFormat: JsonFormat[BookResponseDto] = new JsonFormat[BookResponseDto] {
 
