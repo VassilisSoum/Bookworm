@@ -1,10 +1,10 @@
 package com.bookworm.application.books.domain.model
 
-sealed abstract case class BookTitle private[BookTitle] (title: String) {
+sealed abstract case class BookTitle private[BookTitle] (value: String) {
 
   //to ensure validation and possibly singleton-ness, we override readResolve to use explicit companion object factory method
   private def readResolve(): Object =
-    BookTitle.create(title)
+    BookTitle.create(value)
 }
 
 object BookTitle {
@@ -15,10 +15,10 @@ object BookTitle {
       Right(new BookTitle(title) {})
 }
 
-sealed abstract case class BookSummary private[BookSummary] (summary: String) {
+sealed abstract case class BookSummary private[BookSummary] (value: String) {
 
   private def readResolve(): Object =
-    BookSummary.create(summary)
+    BookSummary.create(value)
 }
 
 object BookSummary {
@@ -29,10 +29,10 @@ object BookSummary {
       Right(new BookSummary(summary) {})
 }
 
-sealed abstract case class BookIsbn private[BookIsbn] (isbn: String) {
+sealed abstract case class BookIsbn private[BookIsbn] (value: String) {
 
   private def readResolve(): Object =
-    BookIsbn.create(isbn)
+    BookIsbn.create(value)
 }
 
 object BookIsbn {
@@ -43,4 +43,4 @@ object BookIsbn {
       Right(new BookIsbn(isbn) {})
 }
 
-case class BookDetails(title: BookTitle, summary: BookSummary, isbn: BookIsbn, genre: GenreId, authors: Seq[AuthorId])
+case class BookDetails(title: BookTitle, summary: BookSummary, isbn: BookIsbn, genre: GenreId, authors: List[AuthorId])

@@ -2,11 +2,9 @@ package com.bookworm.application
 
 import cats.effect.{ExitCode, IO, IOApp}
 import com.bookworm.application.books.adapter.api.BookRestApi
-import com.bookworm.application.books.adapter.repository.{BookRepositoryImpl, BookRepositoryModule}
+import com.bookworm.application.books.adapter.repository.BookRepositoryModule
 import com.bookworm.application.books.adapter.repository.dao.BookDao
-import com.bookworm.application.books.adapter.service.{BookServiceImpl, BookServiceModule}
-import com.bookworm.application.books.domain.port.inbound.BookService
-import com.bookworm.application.books.domain.port.outbound.BookRepository
+import com.bookworm.application.books.adapter.service.BookServiceModule
 import com.bookworm.application.init.BookwormServer
 import com.google.inject._
 import doobie.Transactor

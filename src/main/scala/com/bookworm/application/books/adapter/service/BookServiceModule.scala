@@ -1,7 +1,7 @@
 package com.bookworm.application.books.adapter.service
 
 import cats.effect.Sync
-import com.bookworm.application.books.domain.port.inbound.BookService
+import com.bookworm.application.books.domain.port.inbound.{BookService, BookServiceImpl}
 import com.google.inject.{AbstractModule, Scopes, TypeLiteral}
 import net.codingwell.scalaguice.ScalaModule
 

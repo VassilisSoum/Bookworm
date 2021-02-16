@@ -3,7 +3,8 @@ package com.bookworm.application.integration.books
 import cats.data.Kleisli
 import cats.effect.IO
 import com.bookworm.application.books.adapter.api.BookRestApi
-import com.bookworm.application.books.adapter.api.dto.{BookResponseDto, GetBooksResponseDto, ValidationErrorDto, ValidationErrorType}
+import com.bookworm.application.books.adapter.api.dto.{BookResponseDto, GetBooksResponseDto, ValidationErrorDto}
+import com.bookworm.application.books.domain.model.ValidationError
 import com.google.inject.Key
 import net.codingwell.scalaguice
 import org.http4s._
@@ -34,9 +35,9 @@ class RetrieveBooksWithoutPaginationIntegrationTest extends TestData {
         val expectedBooks = List(
           BookResponseDto(
             bookId = testBookId.id.toString,
-            title = testBookTitle.title,
-            summary = testBookSummary.summary,
-            isbn = testBookIsbn.isbn,
+            title = testBookTitle.value,
+            summary = testBookSummary.value,
+            isbn = testBookIsbn.value,
             genre = testGenre.genreName.genre
           )
         )
@@ -58,7 +59,7 @@ class RetrieveBooksWithoutPaginationIntegrationTest extends TestData {
         val actualBooks = endpoint(request)
           .unsafeRunSync()
         actualBooks.status mustBe Status.BadRequest
-        actualBooks.as[ValidationErrorDto].unsafeRunSync().errorType mustBe ValidationErrorType.EmptyContinuationToken
+        actualBooks.as[ValidationErrorDto].unsafeRunSync().errorType mustBe ValidationError.EmptyContinuationToken
       }
 
       "return 400 BAD REQUEST with error type InvalidContinuationTokenFormat when trying to retrieve all books with continuation token which is invalid" in {
@@ -72,7 +73,7 @@ class RetrieveBooksWithoutPaginationIntegrationTest extends TestData {
         actualBooks
           .as[ValidationErrorDto]
           .unsafeRunSync()
-          .errorType mustBe ValidationErrorType.InvalidContinuationTokenFormat
+          .errorType mustBe ValidationError.InvalidContinuationTokenFormat
       }
 
       "return 400 BAD REQUEST with error type NonPositivePaginationLimit when trying to retrieve all books with a non-positive pagination limit" in {
@@ -88,7 +89,7 @@ class RetrieveBooksWithoutPaginationIntegrationTest extends TestData {
         actualBooks
           .as[ValidationErrorDto]
           .unsafeRunSync()
-          .errorType mustBe ValidationErrorType.NonPositivePaginationLimit
+          .errorType mustBe ValidationError.NonPositivePaginationLimit
       }
 
       "return 400 BAD REQUEST with error type PaginationLimitExceedsMaximum when trying to retrieve all books with too large pagination limit" in {
@@ -104,7 +105,7 @@ class RetrieveBooksWithoutPaginationIntegrationTest extends TestData {
         actualBooks
           .as[ValidationErrorDto]
           .unsafeRunSync()
-          .errorType mustBe ValidationErrorType.PaginationLimitExceedsMaximum
+          .errorType mustBe ValidationError.PaginationLimitExceedsMaximum
       }
     }
   }

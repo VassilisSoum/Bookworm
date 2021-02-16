@@ -1,15 +1,13 @@
-package com.bookworm.application.books.adapter.service
+package com.bookworm.application.books.domain.port.inbound
 
-import cats.effect._
+import cats.effect.Sync
 import com.bookworm.application.books.domain.model.{Book, BusinessError, GenreId, PaginationInfo}
-import com.bookworm.application.books.domain.port.inbound.BookService
 import com.bookworm.application.books.domain.port.inbound.query.BooksByGenreQuery
 import com.bookworm.application.books.domain.port.outbound.BookRepository
 
 import javax.inject.Inject
 
-private[service] class BookServiceImpl[F[_]: Sync] @Inject() (bookRepository: BookRepository[F])
-  extends BookService[F] {
+class BookServiceImpl[F[_]: Sync] @Inject() (bookRepository: BookRepository[F]) extends BookService[F] {
 
   def retrieveBooksByGenre(
     genre: GenreId,
@@ -17,5 +15,6 @@ private[service] class BookServiceImpl[F[_]: Sync] @Inject() (bookRepository: Bo
   ): F[BooksByGenreQuery] =
     bookRepository.getBooksForGenre(genre, paginationInfo)
 
-  override def createBook(book: Book): F[Either[BusinessError, Book]] = ???
+  override def createBook(book: Book): F[Either[BusinessError, Book]] =
+    bookRepository.addBook(book)
 }

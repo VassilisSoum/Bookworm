@@ -60,30 +60,30 @@ class RetrieveBooksWithPaginationIntegrationTest extends TestData {
       val expectedBooksForFirstRun = List(
         BookResponseDto(
           bookId = bookId5.toString,
-          title = testBookTitle.title,
-          summary = testBookSummary.summary,
-          isbn = testBookIsbn.isbn,
+          title = testBookTitle.value,
+          summary = testBookSummary.value,
+          isbn = testBookIsbn.value,
           genre = testGenre.genreName.genre
         ),
         BookResponseDto(
           bookId = bookId4.toString,
-          title = testBookTitle.title,
-          summary = testBookSummary.summary,
-          isbn = testBookIsbn.isbn,
+          title = testBookTitle.value,
+          summary = testBookSummary.value,
+          isbn = testBookIsbn.value,
           genre = testGenre.genreName.genre
         ),
         BookResponseDto(
           bookId = bookId3.toString,
-          title = testBookTitle.title,
-          summary = testBookSummary.summary,
-          isbn = testBookIsbn.isbn,
+          title = testBookTitle.value,
+          summary = testBookSummary.value,
+          isbn = testBookIsbn.value,
           genre = testGenre.genreName.genre
         ),
         BookResponseDto(
           bookId = bookId2.toString,
-          title = testBookTitle.title,
-          summary = testBookSummary.summary,
-          isbn = testBookIsbn.isbn,
+          title = testBookTitle.value,
+          summary = testBookSummary.value,
+          isbn = testBookIsbn.value,
           genre = testGenre.genreName.genre
         )
       )
@@ -108,9 +108,9 @@ class RetrieveBooksWithPaginationIntegrationTest extends TestData {
       val expectedBooksForSecondRun = List(
         BookResponseDto(
           bookId = bookId1.toString,
-          title = testBookTitle.title,
-          summary = testBookSummary.summary,
-          isbn = testBookIsbn.isbn,
+          title = testBookTitle.value,
+          summary = testBookSummary.value,
+          isbn = testBookIsbn.value,
           genre = testGenre.genreName.genre
         )
       )

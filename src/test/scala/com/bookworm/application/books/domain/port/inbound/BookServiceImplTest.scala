@@ -1,9 +1,8 @@
-package com.bookworm.application.books.adapter.service
+package com.bookworm.application.books.domain.port.inbound
 
 import cats.effect.IO
 import com.bookworm.application.books.domain.model._
-import com.bookworm.application.books.domain.port.inbound.BookService
-import com.bookworm.application.books.domain.port.inbound.query.BookQueryModel
+import com.bookworm.application.books.domain.port.inbound.query.{BookQueryModel, BooksByGenreQuery}
 import com.bookworm.application.books.domain.port.outbound.BookRepository
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, WordSpec}
@@ -48,7 +47,12 @@ class BookServiceImplTest extends WordSpec with Matchers with MockFactory {
         )
       )
 
-      (bookRepository.getBooksForGenre _).expects(genreId, paginationInfo).returns(IO.pure(expectedBooks))
+      val booksByGenreQuery = BooksByGenreQuery(
+        expectedBooks,
+        Some(ContinuationToken.create(s"$updatedTimestampOfFirstBook${ContinuationToken.delimiter}$id1").toOption.get)
+      )
+
+      (bookRepository.getBooksForGenre _).expects(genreId, paginationInfo).returns(IO.pure(booksByGenreQuery))
 
       val actualBooks = bookService.retrieveBooksByGenre(genreId, paginationInfo).unsafeRunSync()
 
@@ -62,7 +66,8 @@ class BookServiceImplTest extends WordSpec with Matchers with MockFactory {
       val genreId = GenreId(UUID.randomUUID())
       val paginationInfo = createPaginationInfo
 
-      (bookRepository.getBooksForGenre _).expects(genreId, paginationInfo).returns(IO.pure(List.empty))
+      val booksByGenreQuery = BooksByGenreQuery(List.empty, None)
+      (bookRepository.getBooksForGenre _).expects(genreId, paginationInfo).returns(IO.pure(booksByGenreQuery))
 
       val actualBooks = bookService.retrieveBooksByGenre(genreId, paginationInfo).unsafeRunSync()
 
@@ -70,6 +75,45 @@ class BookServiceImplTest extends WordSpec with Matchers with MockFactory {
 
       actualBooks.books.isEmpty shouldBe true
 
+    }
+
+    "create a book" in {
+      val book = Book(
+        BookId(UUID.randomUUID()),
+        BookDetails(
+          BookTitle.create("title").toOption.get,
+          BookSummary.create("summary").toOption.get,
+          BookIsbn.create("isbn").toOption.get,
+          GenreId(UUID.randomUUID()),
+          List(AuthorId(UUID.randomUUID()))
+        )
+      )
+
+      (bookRepository.addBook _).expects(book).returns(IO.pure(Right(book)))
+
+      val response = bookService.createBook(book).unsafeRunSync()
+
+      response.isRight shouldBe true
+    }
+
+    "return BusinessError when creating a book" in {
+      val book = Book(
+        BookId(UUID.randomUUID()),
+        BookDetails(
+          BookTitle.create("title").toOption.get,
+          BookSummary.create("summary").toOption.get,
+          BookIsbn.create("isbn").toOption.get,
+          GenreId(UUID.randomUUID()),
+          List(AuthorId(UUID.randomUUID()))
+        )
+      )
+
+      (bookRepository.addBook _).expects(book).returns(IO.pure(Left(BusinessError.OneOrMoreAuthorsDoNotExist)))
+
+      val response = bookService.createBook(book).unsafeRunSync()
+
+      response.isLeft shouldBe true
+      response.left.toOption.get == BusinessError.OneOrMoreAuthorsDoNotExist
     }
   }
 

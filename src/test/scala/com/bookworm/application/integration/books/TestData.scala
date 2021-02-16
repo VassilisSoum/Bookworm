@@ -23,7 +23,9 @@ trait TestData extends IntegrationTestModule {
   val testBookIsbn: BookIsbn = BookIsbn.create("TestBookIsbn").toOption.get
   val testAuthorId: AuthorId = AuthorId(UUID.randomUUID())
   val testGenre: Genre = Genre(testGenreId, GenreName.create(testGenreName).toOption.get)
-  val testBook: Book = Book(testBookId, BookDetails(testBookTitle, testBookSummary, testBookIsbn, testGenreId))
+
+  val testBook: Book =
+    Book(testBookId, BookDetails(testBookTitle, testBookSummary, testBookIsbn, testGenreId, List(testAuthorId)))
   val testAuthorFirstName: AuthorFirstName = AuthorFirstName.create("TestAuthorFirstName").toOption.get
   val testAuthorLastName: AuthorLastName = AuthorLastName.create("TestAuthorLastName").toOption.get
   val testAuthor: Author = Author(testAuthorId, AuthorDetails(testAuthorFirstName, testAuthorLastName))
@@ -62,9 +64,9 @@ trait TestData extends IntegrationTestModule {
     sql"""insert into bookworm.book(bookId,title,summary,isbn,genreId,createdAt,updatedAt)
          values (
           ${book.bookId.id},
-          ${book.bookDetails.title.title},
-          ${book.bookDetails.summary.summary},
-          ${book.bookDetails.isbn.isbn},
+          ${book.bookDetails.title.value},
+          ${book.bookDetails.summary.value},
+          ${book.bookDetails.isbn.value},
           ${book.bookDetails.genre.id},
           $now,
           $now
