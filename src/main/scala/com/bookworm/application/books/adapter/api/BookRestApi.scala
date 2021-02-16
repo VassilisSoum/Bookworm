@@ -1,7 +1,6 @@
 package com.bookworm.application.books.adapter.api
 
-import cats.effect.Sync
-import cats.implicits._
+import cats.effect.IO
 import com.bookworm.application.books.adapter.api.BookRestApi.createPaginationInfo
 import com.bookworm.application.books.adapter.api.dto.BookResponseDto.BookResponseDtoOps
 import com.bookworm.application.books.adapter.api.dto.CreateBookRequestDto._
@@ -14,22 +13,22 @@ import org.http4s.{EntityDecoder, EntityEncoder, HttpRoutes}
 
 import javax.inject.Inject
 
-class BookRestApi[F[_]: Sync] @Inject() (bookService: BookService[F]) extends Http4sDsl[F] {
+class BookRestApi @Inject() (bookService: BookService) extends Http4sDsl[IO] {
 
   object OptionalLimitQueryParamMatcher extends OptionalQueryParamDecoderMatcher[Int]("limit")
   object OptionalContinuationTokenParamMatcher extends OptionalQueryParamDecoderMatcher[String]("continuationToken")
 
-  implicit val validationErrorDtoEncoder: EntityEncoder[F, ValidationErrorDto] = jsonEncoderOf[F, ValidationErrorDto]
+  implicit val validationErrorDtoEncoder: EntityEncoder[IO, ValidationErrorDto] = jsonEncoderOf[IO, ValidationErrorDto]
 
-  implicit val businessErrorDtoEncoder: EntityEncoder[F, BusinessErrorDto] = jsonEncoderOf[F, BusinessErrorDto]
+  implicit val businessErrorDtoEncoder: EntityEncoder[IO, BusinessErrorDto] = jsonEncoderOf[IO, BusinessErrorDto]
 
-  implicit val getBooksResponseDtoEntityEncoder: EntityEncoder[F, GetBooksResponseDto] =
-    jsonEncoderOf[F, GetBooksResponseDto]
+  implicit val getBooksResponseDtoEntityEncoder: EntityEncoder[IO, GetBooksResponseDto] =
+    jsonEncoderOf[IO, GetBooksResponseDto]
 
-  implicit val createBookRequestDtoDecoder: EntityDecoder[F, CreateBookRequestDto] = jsonOf[F, CreateBookRequestDto]
+  implicit val createBookRequestDtoDecoder: EntityDecoder[IO, CreateBookRequestDto] = jsonOf[IO, CreateBookRequestDto]
 
-  def getBooks: HttpRoutes[F] =
-    HttpRoutes.of[F] {
+  def getBooks: HttpRoutes[IO] =
+    HttpRoutes.of[IO] {
       case GET -> Root / "genre" / UUIDVar(genreId) / "books" :? OptionalContinuationTokenParamMatcher(
             maybeContinuationToken
           ) +& OptionalLimitQueryParamMatcher(maybeLimit) =>

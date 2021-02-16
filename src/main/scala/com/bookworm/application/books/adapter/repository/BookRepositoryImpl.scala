@@ -1,7 +1,6 @@
 package com.bookworm.application.books.adapter.repository
 
-import cats.effect.Sync
-import cats.implicits._
+import cats.effect.IO
 import com.bookworm.application.books.adapter.repository.BookRepositoryImpl.tryCreateContinuationToken
 import com.bookworm.application.books.adapter.repository.dao.{AuthorDao, BookDao}
 import com.bookworm.application.books.domain.model._
@@ -13,36 +12,36 @@ import doobie.implicits._
 import javax.inject.Inject
 import scala.util.{Failure, Success, Try}
 
-private[repository] class BookRepositoryImpl[F[_]: Sync] @Inject() (
+private[repository] class BookRepositoryImpl @Inject() (
     bookDao: BookDao,
     authorDao: AuthorDao,
-    transactor: Transactor[F]
-) extends BookRepository[F] {
+    transactor: Transactor[IO]
+) extends BookRepository[IO] {
 
   override def getBooksForGenre(
     genreId: GenreId,
     paginationInfo: PaginationInfo
-  ): F[BooksByGenreQuery] =
+  ): IO[BooksByGenreQuery] =
     bookDao.getBooks(genreId, paginationInfo).transact(transactor).flatMap { booksByGenre =>
       booksByGenre.lastOption match {
         case Some(bookByGenre) =>
           tryCreateContinuationToken(bookByGenre) match {
             case Success(continuationToken) =>
-              Sync[F].delay(BooksByGenreQuery(booksByGenre, Some(continuationToken)))
+              IO.pure(BooksByGenreQuery(booksByGenre, Some(continuationToken)))
             case Failure(exception) =>
-              Sync[F].raiseError(exception)
+              IO.raiseError(exception)
           }
         case None =>
-          Sync[F].delay(BooksByGenreQuery(List.empty, None))
+          IO.pure(BooksByGenreQuery(List.empty, None))
       }
     }
 
-  override def addBook(book: Book): F[Either[BusinessError, Book]] =
+  override def addBook(book: Book): IO[Either[BusinessError, Book]] =
     authorDao.allAuthorsExist(book.bookDetails.authors).transact(transactor).flatMap { allAuthorsExist =>
       if (allAuthorsExist) {
         bookDao.insertBook(book).transact(transactor).map(_ => Right(book))
       } else {
-        Sync[F].delay(Left(BusinessError.OneOrMoreAuthorsDoNotExist))
+        IO.pure(Left(BusinessError.OneOrMoreAuthorsDoNotExist))
       }
     }
 }

@@ -1,6 +1,6 @@
 package com.bookworm.application.config
 
-import cats.effect.{Blocker, ContextShift, Resource, Sync}
+import cats.effect.{Blocker, ContextShift, IO, Resource}
 import com.typesafe.config.ConfigFactory
 import pureconfig._
 import pureconfig.module.catseffect.syntax._
@@ -13,8 +13,8 @@ object Configuration {
 
   case class Config(server: ServerConfig, database: DatabaseConfig)
 
-  def load[F[_]: Sync: ContextShift](configFile: String = "application.conf"): Resource[F, Config] =
-    Blocker[F].flatMap { blocker =>
-      Resource.liftF(ConfigSource.fromConfig(ConfigFactory.load(configFile)).loadF[F, Config](blocker))
+  def load(configFile: String = "application.conf")(implicit contextShift: ContextShift[IO]): Resource[IO, Config] =
+    Blocker[IO].flatMap { blocker =>
+      Resource.liftF(ConfigSource.fromConfig(ConfigFactory.load(configFile)).loadF[IO, Config](blocker))
     }
 }

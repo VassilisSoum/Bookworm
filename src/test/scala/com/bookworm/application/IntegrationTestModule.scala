@@ -4,7 +4,7 @@ import cats.effect.{Blocker, ContextShift, IO, Sync}
 import com.bookworm.application.books.adapter.api.BookRestApi
 import com.bookworm.application.books.adapter.repository.BookRepositoryModule
 import com.bookworm.application.books.adapter.repository.dao.BookDao
-import com.bookworm.application.books.adapter.service.BookServiceModule
+import com.bookworm.application.books.domain.port.inbound.BookService
 import com.bookworm.application.integration.FakeClock
 import com.dimafeng.testcontainers.{Container, DockerComposeContainer, ExposedService, ForAllTestContainer}
 import com.google.inject._
@@ -49,13 +49,13 @@ abstract class IntegrationTestModule
       override def configure(): Unit = {
         bind(new TypeLiteral[Sync[IO]] {}).toInstance(implicitly[Sync[IO]])
         bind(classOf[BookDao]).in(Scopes.SINGLETON)
+        bind(classOf[BookService]).in(Scopes.SINGLETON)
         bind(new TypeLiteral[Transactor[IO]] {}).toInstance(synchronousTransactor)
-        bind(new TypeLiteral[BookRestApi[IO]] {}).in(Scopes.SINGLETON)
+        bind(new TypeLiteral[BookRestApi] {}).in(Scopes.SINGLETON)
         bind(classOf[java.time.Clock]).toInstance(fakeClock)
       }
     },
-    new BookServiceModule[IO],
-    new BookRepositoryModule[IO]
+    new BookRepositoryModule
   )
 
   override def afterStart(): Unit =

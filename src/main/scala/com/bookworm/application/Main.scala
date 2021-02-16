@@ -4,7 +4,7 @@ import cats.effect.{ExitCode, IO, IOApp}
 import com.bookworm.application.books.adapter.api.BookRestApi
 import com.bookworm.application.books.adapter.repository.BookRepositoryModule
 import com.bookworm.application.books.adapter.repository.dao.BookDao
-import com.bookworm.application.books.adapter.service.BookServiceModule
+import com.bookworm.application.books.domain.port.inbound.BookService
 import com.bookworm.application.init.BookwormServer
 import com.google.inject._
 import doobie.Transactor
@@ -20,16 +20,14 @@ import scala.concurrent.ExecutionContext.global
 object Main extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] =
-    BookwormServer
-      .createTransactor[IO]
+    BookwormServer.createTransactor
       .use { resources =>
         val injector = Guice.createInjector(
           new Module(resources._1),
-          new BookServiceModule[IO],
-          new BookRepositoryModule[IO]
+          new BookRepositoryModule
         )
         val httpApp = Logger.httpApp(logHeaders = true, logBody = true)(
-          injector.getInstance(Key.get(scalaguice.typeLiteral[BookRestApi[IO]])).getBooks /*<+>*/ .orNotFound
+          injector.getInstance(Key.get(scalaguice.typeLiteral[BookRestApi])).getBooks /*<+>*/ .orNotFound
         )
         for {
           _ <- BookwormServer.migrate(resources._1)
@@ -47,10 +45,11 @@ object Main extends IOApp {
     import cats.effect._
 
     override def configure(): Unit = {
-      bind(new TypeLiteral[Sync[IO]] {}).toInstance(implicitly[Sync[IO]])
+      //bind(new TypeLiteral[Sync[IO]] {}).toInstance(implicitly[Sync[IO]])
       bind(classOf[BookDao]).in(Scopes.SINGLETON)
+      bind(classOf[BookService]).in(Scopes.SINGLETON)
       bind(new TypeLiteral[Transactor[IO]] {}).toInstance(transactor)
-      bind(new TypeLiteral[BookRestApi[IO]] {}).in(Scopes.SINGLETON)
+      bind(classOf[BookRestApi]).in(Scopes.SINGLETON)
       bind(classOf[java.time.Clock]).toInstance(java.time.Clock.systemUTC())
     }
   }

@@ -20,7 +20,7 @@ class RetrieveBooksWithoutPaginationIntegrationTest extends TestData {
   implicit val getBooksResponseEntityDecoder: EntityDecoder[IO, GetBooksResponseDto] = jsonOf
 
   val endpoint: Kleisli[IO, Request[IO], Response[IO]] =
-    injector.getInstance(Key.get(scalaguice.typeLiteral[BookRestApi[IO]])).getBooks /*<+>*/ .orNotFound
+    injector.getInstance(Key.get(scalaguice.typeLiteral[BookRestApi])).getBooks /*<+>*/ .orNotFound
 
   "Retrieving books" when {
     "Calling /genre/{genreId}/books" should {

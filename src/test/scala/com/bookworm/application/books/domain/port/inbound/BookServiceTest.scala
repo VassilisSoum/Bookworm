@@ -10,10 +10,10 @@ import org.scalatest.{Matchers, WordSpec}
 import java.time.LocalDateTime
 import java.util.UUID
 
-class BookServiceImplTest extends WordSpec with Matchers with MockFactory {
+class BookServiceTest extends WordSpec with Matchers with MockFactory {
 
   val bookRepository: BookRepository[IO] = mock[BookRepository[IO]]
-  val bookService: BookService[IO] = new BookServiceImpl(bookRepository)
+  val bookService: BookService = new BookService(bookRepository)
 
   "BookService" should {
     "return books of a specific genre with continuation token given pagination information in descending order" in {
