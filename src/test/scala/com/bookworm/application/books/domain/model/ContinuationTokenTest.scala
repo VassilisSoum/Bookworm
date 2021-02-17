@@ -1,8 +1,8 @@
 package com.bookworm.application.books.domain.model
 
-import org.scalatest.{Matchers, WordSpec}
+import com.bookworm.application.UnitSpec
 
-class ContinuationTokenTest extends WordSpec with Matchers {
+class ContinuationTokenTest extends UnitSpec {
 
   "ContinuationToken" should {
     "create a new instance given valid data" in {

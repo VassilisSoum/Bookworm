@@ -1,16 +1,15 @@
 package com.bookworm.application.books.domain.port.inbound
 
 import cats.effect.IO
+import com.bookworm.application.UnitSpec
 import com.bookworm.application.books.domain.model._
 import com.bookworm.application.books.domain.port.inbound.query.{BookQueryModel, BooksByGenreQuery}
 import com.bookworm.application.books.domain.port.outbound.BookRepository
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.{Matchers, WordSpec}
 
 import java.time.LocalDateTime
 import java.util.UUID
 
-class BookServiceTest extends WordSpec with Matchers with MockFactory {
+class BookServiceTest extends UnitSpec {
 
   val bookRepository: BookRepository[IO] = mock[BookRepository[IO]]
   val bookService: BookService = new BookService(bookRepository)

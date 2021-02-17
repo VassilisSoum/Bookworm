@@ -1,8 +1,8 @@
 package com.bookworm.application.books.domain.model
 
-import org.scalatest.{Matchers, WordSpec}
+import com.bookworm.application.UnitSpec
 
-class AuthorFirstNameTest extends WordSpec with Matchers {
+class AuthorFirstNameTest extends UnitSpec{
 
   "AuthorFirstName" should {
     "create a new instance given valid data" in {

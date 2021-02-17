@@ -1,8 +1,8 @@
 package com.bookworm.application.books.domain.model
 
-import org.scalatest.{Matchers, WordSpec}
+import com.bookworm.application.UnitSpec
 
-class PaginationLimitTest extends WordSpec with Matchers {
+class PaginationLimitTest extends UnitSpec {
 
   "PaginationLimit" should {
     "create a new instance given valid data" in {
