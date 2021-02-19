@@ -1,6 +1,6 @@
 package com.bookworm.application.books.adapter.repository.dao
 
-import com.bookworm.application.books.domain.model.{Book, GenreId, PaginationInfo}
+import com.bookworm.application.books.domain.model.{Book, BookId, GenreId, PaginationInfo}
 import com.bookworm.application.books.domain.port.inbound.query.BookQueryModel
 import doobie.implicits._
 import doobie.implicits.javasql._
@@ -65,8 +65,16 @@ class BookDao @Inject() (clock: Clock) {
          $currentTimestamp,
          $currentTimestamp
         )""".update.run
-      _ <- Update[(UUID, UUID)]("INSERT INTO BOOKWORK.BOOK_AUTHOR(bookId, authorId) VALUES (?, ?)")
+      _ <- Update[(UUID, UUID)]("INSERT INTO BOOKWORM.BOOK_AUTHOR(bookId, authorId) VALUES (?, ?)")
         .updateMany(bookAuthorData)
     } yield ()
   }
+
+  def getOptionalBookById(bookId: BookId): doobie.ConnectionIO[Option[BookQueryModel]] =
+    fr"""SELECT b.bookId, b.title, b.summary, b.isbn,
+           g.genreName, b.updatedAt, b.id
+         FROM bookworm.book b
+         JOIN bookworm.genre g ON g.genreId = b.genreId
+         WHERE b.bookId = ${bookId.id}
+        """.query[BookQueryModel].option
 }

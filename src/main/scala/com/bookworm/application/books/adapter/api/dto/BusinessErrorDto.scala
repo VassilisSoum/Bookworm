@@ -2,7 +2,7 @@ package com.bookworm.application.books.adapter.api.dto
 
 import com.bookworm.application.books.adapter.api.formats
 import com.bookworm.application.books.domain.model.BusinessError
-import com.bookworm.application.books.domain.model.BusinessError.{BookAlreadyExists, OneOrMoreAuthorsDoNotExist}
+import com.bookworm.application.books.domain.model.BusinessError.{BookDoesNotExist, OneOrMoreAuthorsDoNotExist}
 import org.json4s.JsonAST.JString
 import org.json4s.{CustomSerializer, Extraction, JValue, JsonFormat}
 
@@ -15,8 +15,8 @@ object BusinessErrorDto {
       (
         { case JString(businessError) =>
           businessError match {
-            case "BookAlreadyExists"          => BookAlreadyExists
             case "OneOrMoreAuthorsDoNotExist" => BusinessError.OneOrMoreAuthorsDoNotExist
+            case "BookDoesNotExist"           => BusinessError.BookDoesNotExist
           }
         },
         { case businessError: BusinessError =>
@@ -36,9 +36,9 @@ object BusinessErrorDto {
 
   def fromDomain(businessError: BusinessError): BusinessErrorDto =
     businessError match {
-      case BookAlreadyExists =>
-        BusinessErrorDto(BusinessError.BookAlreadyExists, "Book already exists")
       case OneOrMoreAuthorsDoNotExist =>
         BusinessErrorDto(BusinessError.OneOrMoreAuthorsDoNotExist, "Book contains one or more unknown authors")
+      case BookDoesNotExist =>
+        BusinessErrorDto(BusinessError.BookDoesNotExist, "Book does not exist")
     }
 }

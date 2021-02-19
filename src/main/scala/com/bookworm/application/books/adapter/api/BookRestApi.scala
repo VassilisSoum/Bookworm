@@ -3,8 +3,8 @@ package com.bookworm.application.books.adapter.api
 import cats.effect.IO
 import com.bookworm.application.books.adapter.api.BookRestApi.createPaginationInfo
 import com.bookworm.application.books.adapter.api.dto.BookResponseDto.BookResponseDtoOps
-import com.bookworm.application.books.adapter.api.dto.CreateBookRequestDto._
-import com.bookworm.application.books.adapter.api.dto.{BusinessErrorDto, CreateBookRequestDto, GetBooksResponseDto, ValidationErrorDto}
+import com.bookworm.application.books.adapter.api.dto.AddBookRequestDto._
+import com.bookworm.application.books.adapter.api.dto.{BusinessErrorDto, AddBookRequestDto, GetBooksResponseDto, ValidationErrorDto}
 import com.bookworm.application.books.domain.model._
 import com.bookworm.application.books.domain.port.inbound.BookService
 import org.http4s.dsl.Http4sDsl
@@ -25,9 +25,9 @@ class BookRestApi @Inject() (bookService: BookService) extends Http4sDsl[IO] {
   implicit val getBooksResponseDtoEntityEncoder: EntityEncoder[IO, GetBooksResponseDto] =
     jsonEncoderOf[IO, GetBooksResponseDto]
 
-  implicit val createBookRequestDtoDecoder: EntityDecoder[IO, CreateBookRequestDto] = jsonOf[IO, CreateBookRequestDto]
+  implicit val createBookRequestDtoDecoder: EntityDecoder[IO, AddBookRequestDto] = jsonOf[IO, AddBookRequestDto]
 
-  def getBooks: HttpRoutes[IO] =
+  def routes: HttpRoutes[IO] =
     HttpRoutes.of[IO] {
       case GET -> Root / "genre" / UUIDVar(genreId) / "books" :? OptionalContinuationTokenParamMatcher(
             maybeContinuationToken
@@ -48,11 +48,11 @@ class BookRestApi @Inject() (bookService: BookService) extends Http4sDsl[IO] {
             }
         )
       case req @ POST -> Root / "books" =>
-        req.as[CreateBookRequestDto].flatMap { createBookRequestDto =>
-          createBookRequestDto.toDomainModel.fold(
+        req.as[AddBookRequestDto].flatMap { addBookRequestDto =>
+          addBookRequestDto.toDomainModel.fold(
             validationError => BadRequest(ValidationErrorDto.fromDomain(validationError)),
             book =>
-              bookService.createBook(book).flatMap {
+              bookService.addBook(book).flatMap {
                 case Left(businessError) => Conflict(BusinessErrorDto.fromDomain(businessError))
                 case Right(_)            => NoContent()
               }

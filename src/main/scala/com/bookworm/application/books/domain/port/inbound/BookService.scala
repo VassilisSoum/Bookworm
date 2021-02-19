@@ -15,6 +15,6 @@ class BookService @Inject() (bookRepository: BookRepository[IO]) {
   ): IO[BooksByGenreQuery] =
     bookRepository.getBooksForGenre(genre, paginationInfo)
 
-  def createBook(book: Book): IO[Either[BusinessError, Book]] =
+  def addBook(book: Book): IO[Either[BusinessError, Book]] =
     bookRepository.addBook(book)
 }

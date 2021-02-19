@@ -1,8 +1,8 @@
 package com.bookworm.application.books.domain.model
 
-import com.bookworm.application.UnitSpec
+import com.bookworm.application.AbstractUnitTest
 
-class BookTitleTest extends UnitSpec {
+class BookTitleTest extends AbstractUnitTest {
 
   "BookTitle" should {
     "create a new instance given valid data" in {

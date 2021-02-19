@@ -25,6 +25,9 @@ object ValidationErrorDto {
             case "InvalidContinuationTokenFormat" => InvalidContinuationTokenFormat
             case "NonPositivePaginationLimit"     => NonPositivePaginationLimit
             case "PaginationLimitExceedsMaximum"  => PaginationLimitExceedsMaximum
+            case "InvalidIsbnLength"              => InvalidIsbnLength
+            case "EmptyBookAuthorList"            => EmptyBookAuthorList
+            case "InvalidBookGenre"               => InvalidBookGenre
           }
         },
         { case validationError: ValidationError =>
@@ -72,6 +75,18 @@ object ValidationErrorDto {
         ValidationErrorDto(
           ValidationError.PaginationLimitExceedsMaximum,
           "Pagination limit is too large"
+        )
+      case InvalidIsbnLength =>
+        ValidationErrorDto(ValidationError.InvalidIsbnLength, "Isbn should be 13 characters long")
+      case EmptyBookAuthorList =>
+        ValidationErrorDto(
+          ValidationError.EmptyBookAuthorList,
+          "List of book authors cannot be empty when adding a book"
+        )
+      case InvalidBookGenre =>
+        ValidationErrorDto(
+          ValidationError.InvalidBookGenre,
+          "Genre is not valid"
         )
     }
 }

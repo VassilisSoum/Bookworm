@@ -9,9 +9,9 @@ import com.bookworm.application.init.BookwormServer
 import com.google.inject._
 import doobie.Transactor
 import doobie.hikari.HikariTransactor
-import net.codingwell.scalaguice
 import net.codingwell.scalaguice.ScalaModule
 import org.http4s.implicits.http4sKleisliResponseSyntaxOptionT
+import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.Logger
 
@@ -27,7 +27,7 @@ object Main extends IOApp {
           new BookRepositoryModule
         )
         val httpApp = Logger.httpApp(logHeaders = true, logBody = true)(
-          injector.getInstance(Key.get(scalaguice.typeLiteral[BookRestApi])).getBooks /*<+>*/ .orNotFound
+          Router("/" -> injector.getInstance(classOf[BookRestApi]).routes).orNotFound
         )
         for {
           _ <- BookwormServer.migrate(resources._1)

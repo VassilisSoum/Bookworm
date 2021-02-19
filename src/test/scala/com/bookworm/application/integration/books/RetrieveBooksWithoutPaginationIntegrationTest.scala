@@ -1,26 +1,14 @@
 package com.bookworm.application.integration.books
 
-import cats.data.Kleisli
 import cats.effect.IO
-import com.bookworm.application.books.adapter.api.BookRestApi
 import com.bookworm.application.books.adapter.api.dto.{BookResponseDto, GetBooksResponseDto, ValidationErrorDto}
 import com.bookworm.application.books.domain.model.ValidationError
-import com.google.inject.Key
-import net.codingwell.scalaguice
 import org.http4s._
-import org.http4s.implicits.http4sKleisliResponseSyntaxOptionT
-import org.http4s.json4s.jackson.jsonOf
 import org.scalatest.MustMatchers.convertToAnyMustWrapper
 
 import java.time.LocalDateTime
 
-class RetrieveBooksWithoutPaginationIntegrationTest extends TestData {
-
-  implicit val validationErrorDtoEntityDecoder: EntityDecoder[IO, ValidationErrorDto] = jsonOf
-  implicit val getBooksResponseEntityDecoder: EntityDecoder[IO, GetBooksResponseDto] = jsonOf
-
-  val endpoint: Kleisli[IO, Request[IO], Response[IO]] =
-    injector.getInstance(Key.get(scalaguice.typeLiteral[BookRestApi])).getBooks /*<+>*/ .orNotFound
+class RetrieveBooksWithoutPaginationIntegrationTest extends TestData with BookEndpoints with EntityDecoders {
 
   "Retrieving books" when {
     "Calling /genre/{genreId}/books" should {

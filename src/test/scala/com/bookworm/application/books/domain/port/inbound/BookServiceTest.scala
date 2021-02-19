@@ -1,7 +1,7 @@
 package com.bookworm.application.books.domain.port.inbound
 
 import cats.effect.IO
-import com.bookworm.application.UnitSpec
+import com.bookworm.application.AbstractUnitTest
 import com.bookworm.application.books.domain.model._
 import com.bookworm.application.books.domain.port.inbound.query.{BookQueryModel, BooksByGenreQuery}
 import com.bookworm.application.books.domain.port.outbound.BookRepository
@@ -9,7 +9,7 @@ import com.bookworm.application.books.domain.port.outbound.BookRepository
 import java.time.LocalDateTime
 import java.util.UUID
 
-class BookServiceTest extends UnitSpec {
+class BookServiceTest extends AbstractUnitTest {
 
   val bookRepository: BookRepository[IO] = mock[BookRepository[IO]]
   val bookService: BookService = new BookService(bookRepository)
@@ -76,40 +76,18 @@ class BookServiceTest extends UnitSpec {
 
     }
 
-    "create a book" in {
-      val book = Book(
-        BookId(UUID.randomUUID()),
-        BookDetails(
-          BookTitle.create("title").toOption.get,
-          BookSummary.create("summary").toOption.get,
-          BookIsbn.create("isbn").toOption.get,
-          GenreId(UUID.randomUUID()),
-          List(AuthorId(UUID.randomUUID()))
-        )
-      )
+    "add a book" in {
+      (bookRepository.addBook _).expects(testBook).returns(IO.pure(Right(testBook)))
 
-      (bookRepository.addBook _).expects(book).returns(IO.pure(Right(book)))
-
-      val response = bookService.createBook(book).unsafeRunSync()
+      val response = bookService.addBook(testBook).unsafeRunSync()
 
       response.isRight shouldBe true
     }
 
-    "return BusinessError when creating a book" in {
-      val book = Book(
-        BookId(UUID.randomUUID()),
-        BookDetails(
-          BookTitle.create("title").toOption.get,
-          BookSummary.create("summary").toOption.get,
-          BookIsbn.create("isbn").toOption.get,
-          GenreId(UUID.randomUUID()),
-          List(AuthorId(UUID.randomUUID()))
-        )
-      )
+    "return BusinessError when adding a book" in {
+      (bookRepository.addBook _).expects(testBook).returns(IO.pure(Left(BusinessError.OneOrMoreAuthorsDoNotExist)))
 
-      (bookRepository.addBook _).expects(book).returns(IO.pure(Left(BusinessError.OneOrMoreAuthorsDoNotExist)))
-
-      val response = bookService.createBook(book).unsafeRunSync()
+      val response = bookService.addBook(testBook).unsafeRunSync()
 
       response.isLeft shouldBe true
       response.left.toOption.get == BusinessError.OneOrMoreAuthorsDoNotExist

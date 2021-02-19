@@ -8,6 +8,7 @@ val PureConfigVersion = "0.14.0"
 val FlywayVersion = "7.3.2"
 val TestContainersVersion = "0.38.8"
 val ScalaGuiceVersion = "4.2.11"
+val Json4sVersion = "3.6.10"
 
 lazy val root = (project in file("."))
   .settings(
@@ -31,6 +32,7 @@ lazy val root = (project in file("."))
       "org.http4s" %% "http4s-blaze-client" % Http4sVersion,
       "org.http4s" %% "http4s-dsl" % Http4sVersion,
       "org.http4s" %% "http4s-json4s-jackson" % Http4sVersion,
+      "org.json4s" %% "json4s-ext" % Json4sVersion,
       "org.scalamock" %% "scalamock" % ScalaMockVersion % Test,
       "ch.qos.logback" % "logback-classic" % LogbackVersion,
       "org.tpolecat" %% "doobie-core" % DoobieVersion,

@@ -39,6 +39,7 @@ object BookIsbn {
 
   def create(isbn: String): Either[ValidationError, BookIsbn] =
     if (isbn.isEmpty) Left(ValidationError.EmptyBookIsbn)
+    else if (isbn.length != 13) Left(ValidationError.InvalidIsbnLength)
     else
       Right(new BookIsbn(isbn) {})
 }

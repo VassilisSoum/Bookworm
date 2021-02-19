@@ -20,7 +20,7 @@ trait TestData extends IntegrationTestModule {
   val testBookId: BookId = BookId(UUID.randomUUID())
   val testBookTitle: BookTitle = BookTitle.create("TestBookTitle").toOption.get
   val testBookSummary: BookSummary = BookSummary.create("TestBookSummary").toOption.get
-  val testBookIsbn: BookIsbn = BookIsbn.create("TestBookIsbn").toOption.get
+  val testBookIsbn: BookIsbn = BookIsbn.create("9781234567897").toOption.get
   val testAuthorId: AuthorId = AuthorId(UUID.randomUUID())
   val testGenre: Genre = Genre(testGenreId, GenreName.create(testGenreName).toOption.get)
 
@@ -29,6 +29,8 @@ trait TestData extends IntegrationTestModule {
   val testAuthorFirstName: AuthorFirstName = AuthorFirstName.create("TestAuthorFirstName").toOption.get
   val testAuthorLastName: AuthorLastName = AuthorLastName.create("TestAuthorLastName").toOption.get
   val testAuthor: Author = Author(testAuthorId, AuthorDetails(testAuthorFirstName, testAuthorLastName))
+
+  val testPaginationLimit: PaginationLimit = PaginationLimit.create(PaginationLimit.defaultPaginationLimit).toOption.get
 
   override def afterAll(): Unit = {
     val transaction = for {

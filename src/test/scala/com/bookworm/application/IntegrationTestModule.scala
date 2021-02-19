@@ -1,6 +1,6 @@
 package com.bookworm.application
 
-import cats.effect.{Blocker, ContextShift, IO, Sync}
+import cats.effect.{Blocker, ContextShift, IO}
 import com.bookworm.application.books.adapter.api.BookRestApi
 import com.bookworm.application.books.adapter.repository.BookRepositoryModule
 import com.bookworm.application.books.adapter.repository.dao.BookDao
@@ -47,7 +47,7 @@ abstract class IntegrationTestModule
     new AbstractModule with ScalaModule {
 
       override def configure(): Unit = {
-        bind(new TypeLiteral[Sync[IO]] {}).toInstance(implicitly[Sync[IO]])
+        //bind(new TypeLiteral[Sync[IO]] {}).toInstance(implicitly[Sync[IO]])
         bind(classOf[BookDao]).in(Scopes.SINGLETON)
         bind(classOf[BookService]).in(Scopes.SINGLETON)
         bind(new TypeLiteral[Transactor[IO]] {}).toInstance(synchronousTransactor)

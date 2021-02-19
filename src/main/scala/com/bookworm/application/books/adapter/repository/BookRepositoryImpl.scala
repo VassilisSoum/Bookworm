@@ -44,6 +44,12 @@ private[repository] class BookRepositoryImpl @Inject() (
         IO.pure(Left(BusinessError.OneOrMoreAuthorsDoNotExist))
       }
     }
+
+  override def getBookById(bookId: BookId): IO[Either[BusinessError, BookQueryModel]] =
+    bookDao.getOptionalBookById(bookId).transact(transactor).map {
+      case Some(bookQueryModel) => Right(bookQueryModel)
+      case None                 => Left(BusinessError.BookDoesNotExist)
+    }
 }
 
 object BookRepositoryImpl {

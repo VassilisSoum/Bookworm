@@ -1,8 +1,8 @@
 package com.bookworm.application.books.domain.model
 
-import com.bookworm.application.UnitSpec
+import com.bookworm.application.AbstractUnitTest
 
-class ContinuationTokenTest extends UnitSpec {
+class ContinuationTokenTest extends AbstractUnitTest {
 
   "ContinuationToken" should {
     "create a new instance given valid data" in {
