@@ -18,7 +18,7 @@ private[repository] class BookRepositoryImpl @Inject() (
     transactor: Transactor[IO]
 ) extends BookRepository[IO] {
 
-  override def getBooksForGenre(
+  override def getAllByGenre(
     genreId: GenreId,
     paginationInfo: PaginationInfo
   ): IO[BooksByGenreQuery] =
@@ -36,7 +36,7 @@ private[repository] class BookRepositoryImpl @Inject() (
       }
     }
 
-  override def addBook(book: Book): IO[Either[BusinessError, Book]] =
+  override def add(book: Book): IO[Either[BusinessError, Book]] =
     authorDao.allAuthorsExist(book.bookDetails.authors).transact(transactor).flatMap { allAuthorsExist =>
       if (allAuthorsExist) {
         bookDao.insertBook(book).transact(transactor).map(_ => Right(book))
@@ -45,10 +45,16 @@ private[repository] class BookRepositoryImpl @Inject() (
       }
     }
 
-  override def getBookById(bookId: BookId): IO[Either[BusinessError, BookQueryModel]] =
+  override def getById(bookId: BookId): IO[Either[BusinessError, BookQueryModel]] =
     bookDao.getOptionalBookById(bookId).transact(transactor).map {
       case Some(bookQueryModel) => Right(bookQueryModel)
       case None                 => Left(BusinessError.BookDoesNotExist)
+    }
+
+  override def remove(bookId: BookId): IO[Either[BusinessError, Unit]] =
+    bookDao.softDelete(bookId).transact(transactor).map {
+      case BookStatus.Available   => Left(BusinessError.BookDoesNotExist)
+      case BookStatus.Unavailable => Right(())
     }
 }
 

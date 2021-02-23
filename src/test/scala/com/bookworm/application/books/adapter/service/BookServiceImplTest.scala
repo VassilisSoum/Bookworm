@@ -1,4 +1,4 @@
-package com.bookworm.application.books.domain.port.inbound
+package com.bookworm.application.books.adapter.service
 
 import cats.effect.IO
 import com.bookworm.application.AbstractUnitTest
@@ -9,10 +9,10 @@ import com.bookworm.application.books.domain.port.outbound.BookRepository
 import java.time.LocalDateTime
 import java.util.UUID
 
-class BookServiceTest extends AbstractUnitTest {
+class BookServiceImplTest extends AbstractUnitTest {
 
   val bookRepository: BookRepository[IO] = mock[BookRepository[IO]]
-  val bookService: BookService = new BookService(bookRepository)
+  val bookService: BookServiceImpl = new BookServiceImpl(bookRepository)
 
   "BookService" should {
     "return books of a specific genre with continuation token given pagination information in descending order" in {
@@ -51,7 +51,7 @@ class BookServiceTest extends AbstractUnitTest {
         Some(ContinuationToken.create(s"$updatedTimestampOfFirstBook${ContinuationToken.delimiter}$id1").toOption.get)
       )
 
-      (bookRepository.getBooksForGenre _).expects(genreId, paginationInfo).returns(IO.pure(booksByGenreQuery))
+      (bookRepository.getAllByGenre _).expects(genreId, paginationInfo).returns(IO.pure(booksByGenreQuery))
 
       val actualBooks = bookService.retrieveBooksByGenre(genreId, paginationInfo).unsafeRunSync()
 
@@ -66,7 +66,7 @@ class BookServiceTest extends AbstractUnitTest {
       val paginationInfo = createPaginationInfo
 
       val booksByGenreQuery = BooksByGenreQuery(List.empty, None)
-      (bookRepository.getBooksForGenre _).expects(genreId, paginationInfo).returns(IO.pure(booksByGenreQuery))
+      (bookRepository.getAllByGenre _).expects(genreId, paginationInfo).returns(IO.pure(booksByGenreQuery))
 
       val actualBooks = bookService.retrieveBooksByGenre(genreId, paginationInfo).unsafeRunSync()
 
@@ -77,7 +77,7 @@ class BookServiceTest extends AbstractUnitTest {
     }
 
     "add a book" in {
-      (bookRepository.addBook _).expects(testBook).returns(IO.pure(Right(testBook)))
+      (bookRepository.add _).expects(testBook).returns(IO.pure(Right(testBook)))
 
       val response = bookService.addBook(testBook).unsafeRunSync()
 
@@ -85,13 +85,29 @@ class BookServiceTest extends AbstractUnitTest {
     }
 
     "return BusinessError when adding a book" in {
-      (bookRepository.addBook _).expects(testBook).returns(IO.pure(Left(BusinessError.OneOrMoreAuthorsDoNotExist)))
+      (bookRepository.add _).expects(testBook).returns(IO.pure(Left(BusinessError.OneOrMoreAuthorsDoNotExist)))
 
       val response = bookService.addBook(testBook).unsafeRunSync()
 
       response.isLeft shouldBe true
       response.left.toOption.get == BusinessError.OneOrMoreAuthorsDoNotExist
     }
+  }
+
+  "remove a book that exists" in {
+    (bookRepository.remove _).expects(testBook.bookId).returns(IO.pure(Right(())))
+
+    val response = bookService.removeBook(testBook.bookId).unsafeRunSync()
+
+    response.isRight shouldBe true
+  }
+
+  "return BusinessError when removing a book" in {
+    (bookRepository.remove _).expects(testBook.bookId).returns(IO.pure(Left(BusinessError.BookDoesNotExist)))
+
+    val response = bookService.removeBook(testBook.bookId).unsafeRunSync()
+
+    response.left.toOption.get shouldBe BusinessError.BookDoesNotExist
   }
 
   private def createPaginationInfo: PaginationInfo = {

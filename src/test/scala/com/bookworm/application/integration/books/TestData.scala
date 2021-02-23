@@ -25,7 +25,11 @@ trait TestData extends IntegrationTestModule {
   val testGenre: Genre = Genre(testGenreId, GenreName.create(testGenreName).toOption.get)
 
   val testBook: Book =
-    Book(testBookId, BookDetails(testBookTitle, testBookSummary, testBookIsbn, testGenreId, List(testAuthorId)))
+    Book(
+      testBookId,
+      BookDetails(testBookTitle, testBookSummary, testBookIsbn, testGenreId, List(testAuthorId)),
+      BookStatus.Available
+    )
   val testAuthorFirstName: AuthorFirstName = AuthorFirstName.create("TestAuthorFirstName").toOption.get
   val testAuthorLastName: AuthorLastName = AuthorLastName.create("TestAuthorLastName").toOption.get
   val testAuthor: Author = Author(testAuthorId, AuthorDetails(testAuthorFirstName, testAuthorLastName))

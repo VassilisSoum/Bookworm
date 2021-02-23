@@ -47,7 +47,8 @@ object AddBookRequestDto {
             isbn,
             GenreId(genreId),
             authorIds.toList.map(authorId => AuthorId(UUID.fromString(authorId)))
-          )
+          ),
+          BookStatus.Available
         )
       } yield book
   }

@@ -21,11 +21,11 @@ class BookRepositoryImplTest extends TestData {
 
       runInTransaction(insertIntoGenre(testGenre) *> insertIntoAuthor(testAuthor))
 
-      bookRepository.addBook(testBook).unsafeRunSync().toOption.get mustBe testBook
+      bookRepository.add(testBook).unsafeRunSync().toOption.get mustBe testBook
     }
 
     "Retrieve previous added book" in {
-      val addedBook: BookQueryModel = bookRepository.getBookById(testBookId).unsafeRunSync().toOption.get
+      val addedBook: BookQueryModel = bookRepository.getById(testBookId).unsafeRunSync().toOption.get
       addedBook.bookId mustBe testBookId.id
       addedBook.genre mustBe testGenreName
       addedBook.id must be > 0L
@@ -35,11 +35,17 @@ class BookRepositoryImplTest extends TestData {
       addedBook.updatedAt mustBe LocalDateTime.ofInstant(fakeClock.current, fakeClock.zoneId)
     }
 
-    val expectedError = BusinessError.BookDoesNotExist
-    s"Return $expectedError when retrieving a book that does not exist" in {
-      val actualError = bookRepository.getBookById(BookId(UUID.randomUUID())).unsafeRunSync().left.toOption.get
+    "Return BookDoesNotExist when retrieving a book that does not exist" in {
+      val expectedError = BusinessError.BookDoesNotExist
+      val actualError = bookRepository.getById(BookId(UUID.randomUUID())).unsafeRunSync().left.toOption.get
 
       actualError mustBe expectedError
+    }
+
+    "Remove an existing book" in {
+      bookRepository.remove(testBookId).unsafeRunSync().isRight mustBe true
+
+      bookRepository.remove(testBookId).unsafeRunSync().isLeft mustBe true
     }
   }
 }

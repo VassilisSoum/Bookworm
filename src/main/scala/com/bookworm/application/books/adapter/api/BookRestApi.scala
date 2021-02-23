@@ -2,18 +2,22 @@ package com.bookworm.application.books.adapter.api
 
 import cats.effect.IO
 import com.bookworm.application.books.adapter.api.BookRestApi.createPaginationInfo
-import com.bookworm.application.books.adapter.api.dto.BookResponseDto.BookResponseDtoOps
 import com.bookworm.application.books.adapter.api.dto.AddBookRequestDto._
-import com.bookworm.application.books.adapter.api.dto.{BusinessErrorDto, AddBookRequestDto, GetBooksResponseDto, ValidationErrorDto}
+import com.bookworm.application.books.adapter.api.dto.BookResponseDto.BookResponseDtoOps
+import com.bookworm.application.books.adapter.api.dto.{AddBookRequestDto, BusinessErrorDto, GetBooksResponseDto, ValidationErrorDto}
 import com.bookworm.application.books.domain.model._
-import com.bookworm.application.books.domain.port.inbound.BookService
+import com.bookworm.application.books.domain.port.inbound.{AddBookUseCase, GetBooksByGenreUseCase, RemoveBookUseCase}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.json4s.jackson.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder, HttpRoutes}
 
 import javax.inject.Inject
 
-class BookRestApi @Inject() (bookService: BookService) extends Http4sDsl[IO] {
+class BookRestApi @Inject() (
+    getBooksByGenreUseCase: GetBooksByGenreUseCase[IO],
+    addBookUseCase: AddBookUseCase[IO],
+    removeBookUseCase: RemoveBookUseCase[IO]
+) extends Http4sDsl[IO] {
 
   object OptionalLimitQueryParamMatcher extends OptionalQueryParamDecoderMatcher[Int]("limit")
   object OptionalContinuationTokenParamMatcher extends OptionalQueryParamDecoderMatcher[String]("continuationToken")
@@ -38,7 +42,7 @@ class BookRestApi @Inject() (bookService: BookService) extends Http4sDsl[IO] {
         }).fold(
           validationError => BadRequest(ValidationErrorDto.fromDomain(validationError)),
           paginationInfo =>
-            bookService.retrieveBooksByGenre(GenreId(genreId), paginationInfo).flatMap { booksByGenreQuery =>
+            getBooksByGenreUseCase.retrieveBooksByGenre(GenreId(genreId), paginationInfo).flatMap { booksByGenreQuery =>
               Ok(
                 GetBooksResponseDto(
                   booksByGenreQuery.books.map(_.fromDomainQueryModel),
@@ -52,11 +56,16 @@ class BookRestApi @Inject() (bookService: BookService) extends Http4sDsl[IO] {
           addBookRequestDto.toDomainModel.fold(
             validationError => BadRequest(ValidationErrorDto.fromDomain(validationError)),
             book =>
-              bookService.addBook(book).flatMap {
+              addBookUseCase.addBook(book).flatMap {
                 case Left(businessError) => Conflict(BusinessErrorDto.fromDomain(businessError))
                 case Right(_)            => NoContent()
               }
           )
+        }
+      case DELETE -> Root / "books" / UUIDVar(bookId) =>
+        removeBookUseCase.removeBook(BookId(bookId)).flatMap {
+          case Left(businessError) => Conflict(BusinessErrorDto.fromDomain(businessError))
+          case Right(_)            => NoContent()
         }
 
     }
