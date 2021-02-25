@@ -9,8 +9,8 @@ sealed abstract case class BookTitle private[BookTitle] (value: String) {
 
 object BookTitle {
 
-  def create(title: String): Either[ValidationError, BookTitle] =
-    if (title.isEmpty) Left(ValidationError.EmptyBookTitle)
+  def create(title: String): Either[DomainValidationError, BookTitle] =
+    if (title.isEmpty) Left(DomainValidationError.EmptyBookTitle)
     else
       Right(new BookTitle(title) {})
 }
@@ -23,8 +23,8 @@ sealed abstract case class BookSummary private[BookSummary] (value: String) {
 
 object BookSummary {
 
-  def create(summary: String): Either[ValidationError, BookSummary] =
-    if (summary.isEmpty) Left(ValidationError.EmptyBookSummary)
+  def create(summary: String): Either[DomainValidationError, BookSummary] =
+    if (summary.isEmpty) Left(DomainValidationError.EmptyBookSummary)
     else
       Right(new BookSummary(summary) {})
 }
@@ -37,9 +37,9 @@ sealed abstract case class BookIsbn private[BookIsbn] (value: String) {
 
 object BookIsbn {
 
-  def create(isbn: String): Either[ValidationError, BookIsbn] =
-    if (isbn.isEmpty) Left(ValidationError.EmptyBookIsbn)
-    else if (isbn.length != 13) Left(ValidationError.InvalidIsbnLength)
+  def create(isbn: String): Either[DomainValidationError, BookIsbn] =
+    if (isbn.isEmpty) Left(DomainValidationError.EmptyBookIsbn)
+    else if (isbn.length != 13) Left(DomainValidationError.InvalidIsbnLength)
     else
       Right(new BookIsbn(isbn) {})
 }

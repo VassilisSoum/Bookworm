@@ -13,7 +13,7 @@ class BookTitleTest extends AbstractUnitTest {
 
     "return ValidationError#EmptyBookTitle if the title provided is empty" in {
       val bookTitleEither = BookTitle.create("")
-      bookTitleEither shouldBe Left(ValidationError.EmptyBookTitle)
+      bookTitleEither shouldBe Left(DomainValidationError.EmptyBookTitle)
     }
   }
 }

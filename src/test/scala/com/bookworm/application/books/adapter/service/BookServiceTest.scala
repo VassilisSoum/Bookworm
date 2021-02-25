@@ -9,10 +9,10 @@ import com.bookworm.application.books.domain.port.outbound.BookRepository
 import java.time.LocalDateTime
 import java.util.UUID
 
-class BookServiceImplTest extends AbstractUnitTest {
+class BookServiceTest extends AbstractUnitTest {
 
   val bookRepository: BookRepository[IO] = mock[BookRepository[IO]]
-  val bookService: BookServiceImpl = new BookServiceImpl(bookRepository)
+  val bookService: BookService = new BookService(bookRepository)
 
   "BookService" should {
     "return books of a specific genre with continuation token given pagination information in descending order" in {
@@ -85,12 +85,12 @@ class BookServiceImplTest extends AbstractUnitTest {
     }
 
     "return BusinessError when adding a book" in {
-      (bookRepository.add _).expects(testBook).returns(IO.pure(Left(BusinessError.OneOrMoreAuthorsDoNotExist)))
+      (bookRepository.add _).expects(testBook).returns(IO.pure(Left(DomainBusinessError.OneOrMoreAuthorsDoNotExist)))
 
       val response = bookService.addBook(testBook).unsafeRunSync()
 
       response.isLeft shouldBe true
-      response.left.toOption.get == BusinessError.OneOrMoreAuthorsDoNotExist
+      response.left.toOption.get == DomainBusinessError.OneOrMoreAuthorsDoNotExist
     }
   }
 
@@ -103,11 +103,29 @@ class BookServiceImplTest extends AbstractUnitTest {
   }
 
   "return BusinessError when removing a book" in {
-    (bookRepository.remove _).expects(testBook.bookId).returns(IO.pure(Left(BusinessError.BookDoesNotExist)))
+    (bookRepository.remove _).expects(testBook.bookId).returns(IO.pure(Left(DomainBusinessError.BookDoesNotExist)))
 
     val response = bookService.removeBook(testBook.bookId).unsafeRunSync()
 
-    response.left.toOption.get shouldBe BusinessError.BookDoesNotExist
+    response.left.toOption.get shouldBe DomainBusinessError.BookDoesNotExist
+  }
+
+  "update a book" in {
+    (bookRepository.update _).expects(testBook).returns(IO.pure(Right(testBook)))
+
+    val response = bookService.updateBook(testBook).unsafeRunSync()
+
+    response.isRight shouldBe true
+    response.toOption.get shouldBe testBook
+  }
+
+  "return BusinessError when updating a book" in {
+    (bookRepository.update _).expects(testBook).returns(IO.pure(Left(DomainBusinessError.OneOrMoreAuthorsDoNotExist)))
+
+    val response = bookService.updateBook(testBook).unsafeRunSync()
+
+    response.isLeft shouldBe true
+    response.left.toOption.get shouldBe DomainBusinessError.OneOrMoreAuthorsDoNotExist
   }
 
   private def createPaginationInfo: PaginationInfo = {

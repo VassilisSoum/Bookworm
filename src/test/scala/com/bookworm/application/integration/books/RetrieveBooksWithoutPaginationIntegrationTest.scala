@@ -2,7 +2,7 @@ package com.bookworm.application.integration.books
 
 import cats.effect.IO
 import com.bookworm.application.books.adapter.api.dto.{BookResponseDto, GetBooksResponseDto, ValidationErrorDto}
-import com.bookworm.application.books.domain.model.ValidationError
+import com.bookworm.application.books.domain.model.DomainValidationError
 import org.http4s._
 import org.scalatest.MustMatchers.convertToAnyMustWrapper
 
@@ -47,7 +47,7 @@ class RetrieveBooksWithoutPaginationIntegrationTest extends TestData with BookEn
         val actualBooks = endpoint(request)
           .unsafeRunSync()
         actualBooks.status mustBe Status.BadRequest
-        actualBooks.as[ValidationErrorDto].unsafeRunSync().errorType mustBe ValidationError.EmptyContinuationToken
+        actualBooks.as[ValidationErrorDto].unsafeRunSync().errorType mustBe DomainValidationError.EmptyContinuationToken
       }
 
       "return 400 BAD REQUEST with error type InvalidContinuationTokenFormat when trying to retrieve all books with continuation token which is invalid" in {
@@ -61,7 +61,7 @@ class RetrieveBooksWithoutPaginationIntegrationTest extends TestData with BookEn
         actualBooks
           .as[ValidationErrorDto]
           .unsafeRunSync()
-          .errorType mustBe ValidationError.InvalidContinuationTokenFormat
+          .errorType mustBe DomainValidationError.InvalidContinuationTokenFormat
       }
 
       "return 400 BAD REQUEST with error type NonPositivePaginationLimit when trying to retrieve all books with a non-positive pagination limit" in {
@@ -77,7 +77,7 @@ class RetrieveBooksWithoutPaginationIntegrationTest extends TestData with BookEn
         actualBooks
           .as[ValidationErrorDto]
           .unsafeRunSync()
-          .errorType mustBe ValidationError.NonPositivePaginationLimit
+          .errorType mustBe DomainValidationError.NonPositivePaginationLimit
       }
 
       "return 400 BAD REQUEST with error type PaginationLimitExceedsMaximum when trying to retrieve all books with too large pagination limit" in {
@@ -93,7 +93,7 @@ class RetrieveBooksWithoutPaginationIntegrationTest extends TestData with BookEn
         actualBooks
           .as[ValidationErrorDto]
           .unsafeRunSync()
-          .errorType mustBe ValidationError.PaginationLimitExceedsMaximum
+          .errorType mustBe DomainValidationError.PaginationLimitExceedsMaximum
       }
     }
   }

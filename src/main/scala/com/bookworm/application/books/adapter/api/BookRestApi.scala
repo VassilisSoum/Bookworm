@@ -4,9 +4,9 @@ import cats.effect.IO
 import com.bookworm.application.books.adapter.api.BookRestApi.createPaginationInfo
 import com.bookworm.application.books.adapter.api.dto.AddBookRequestDto._
 import com.bookworm.application.books.adapter.api.dto.BookResponseDto.BookResponseDtoOps
-import com.bookworm.application.books.adapter.api.dto.{AddBookRequestDto, BusinessErrorDto, GetBooksResponseDto, ValidationErrorDto}
+import com.bookworm.application.books.adapter.api.dto._
 import com.bookworm.application.books.domain.model._
-import com.bookworm.application.books.domain.port.inbound.{AddBookUseCase, GetBooksByGenreUseCase, RemoveBookUseCase}
+import com.bookworm.application.books.domain.port.inbound.{AddBookUseCase, GetBooksByGenreUseCase, RemoveBookUseCase, UpdateBookUseCase}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.json4s.jackson.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder, HttpRoutes}
@@ -16,7 +16,8 @@ import javax.inject.Inject
 class BookRestApi @Inject() (
     getBooksByGenreUseCase: GetBooksByGenreUseCase[IO],
     addBookUseCase: AddBookUseCase[IO],
-    removeBookUseCase: RemoveBookUseCase[IO]
+    removeBookUseCase: RemoveBookUseCase[IO],
+    updateBookUseCase: UpdateBookUseCase[IO]
 ) extends Http4sDsl[IO] {
 
   object OptionalLimitQueryParamMatcher extends OptionalQueryParamDecoderMatcher[Int]("limit")
@@ -30,6 +31,8 @@ class BookRestApi @Inject() (
     jsonEncoderOf[IO, GetBooksResponseDto]
 
   implicit val createBookRequestDtoDecoder: EntityDecoder[IO, AddBookRequestDto] = jsonOf[IO, AddBookRequestDto]
+
+  implicit val updateBookRequestDtoDecoder: EntityDecoder[IO, UpdateBookRequestDto] = jsonOf[IO, UpdateBookRequestDto]
 
   def routes: HttpRoutes[IO] =
     HttpRoutes.of[IO] {
@@ -67,7 +70,19 @@ class BookRestApi @Inject() (
           case Left(businessError) => Conflict(BusinessErrorDto.fromDomain(businessError))
           case Right(_)            => NoContent()
         }
-
+      case req @ PUT -> Root / "books" / UUIDVar(bookId) =>
+        req.as[UpdateBookRequestDto].flatMap { updateBookRequestDto =>
+          updateBookRequestDto
+            .toDomainModel(BookId(bookId))
+            .fold(
+              validationError => BadRequest(ValidationErrorDto.fromDomain(validationError)),
+              book =>
+                updateBookUseCase.updateBook(book).flatMap {
+                  case Left(businessError) => Conflict(BusinessErrorDto.fromDomain(businessError))
+                  case Right(_)            => NoContent()
+                }
+            )
+        }
     }
 }
 
@@ -76,7 +91,7 @@ object BookRestApi {
   def createPaginationInfo(
     maybeContinuationToken: Option[String],
     limit: Int
-  ): Either[ValidationError, PaginationInfo] =
+  ): Either[DomainValidationError, PaginationInfo] =
     maybeContinuationToken match {
       case Some(continuationToken) =>
         for {

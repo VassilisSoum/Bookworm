@@ -29,14 +29,14 @@ object AddBookRequestDto {
 
   implicit class AddBookRequestDtoOps(addBookRequestDto: AddBookRequestDto) {
 
-    def toDomainModel: Either[ValidationError, Book] =
+    def toDomainModel: Either[DomainValidationError, Book] =
       for {
         title <- BookTitle.create(addBookRequestDto.title)
         summary <- BookSummary.create(addBookRequestDto.summary)
         isbn <- BookIsbn.create(addBookRequestDto.isbn)
-        authorIds <- addBookRequestDto.authorIds.toNel.toRight(ValidationError.EmptyBookAuthorList)
+        authorIds <- addBookRequestDto.authorIds.toNel.toRight(DomainValidationError.EmptyBookAuthorList)
         genreId <- Try(UUID.fromString(addBookRequestDto.genreId)).toEither.left.map(_ =>
-          ValidationError.InvalidBookGenre
+          DomainValidationError.InvalidBookGenre
         )
         bookId = BookId(UUID.randomUUID())
         book = Book(

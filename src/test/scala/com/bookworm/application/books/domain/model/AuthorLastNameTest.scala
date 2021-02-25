@@ -13,7 +13,7 @@ class AuthorLastNameTest extends AbstractUnitTest {
 
     "return ValidationError#EmptyAuthorLastName if the last name provided is empty" in {
       val authorLastNameEither = AuthorLastName.create("")
-      authorLastNameEither shouldBe Left(ValidationError.EmptyAuthorLastName)
+      authorLastNameEither shouldBe Left(DomainValidationError.EmptyAuthorLastName)
     }
   }
 }

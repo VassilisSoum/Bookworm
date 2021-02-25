@@ -13,7 +13,7 @@ class BookSummaryTest extends AbstractUnitTest {
 
     "return ValidationError#EmptyBookSummary if the summary provided is empty" in {
       val bookSummaryEither = BookSummary.create("")
-      bookSummaryEither shouldBe Left(ValidationError.EmptyBookSummary)
+      bookSummaryEither shouldBe Left(DomainValidationError.EmptyBookSummary)
     }
   }
 }

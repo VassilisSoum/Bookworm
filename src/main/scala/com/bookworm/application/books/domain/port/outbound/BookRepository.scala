@@ -5,7 +5,8 @@ import com.bookworm.application.books.domain.port.inbound.query.{BookQueryModel,
 
 trait BookRepository[F[_]] {
   def getAllByGenre(genreId: GenreId, paginationInfo: PaginationInfo): F[BooksByGenreQuery]
-  def getById(bookId: BookId): F[Either[BusinessError, BookQueryModel]]
-  def add(book: Book): F[Either[BusinessError, Book]]
-  def remove(bookId: BookId): F[Either[BusinessError, Unit]]
+  def getById(bookId: BookId): F[Either[DomainError, BookQueryModel]]
+  def add(book: Book): F[Either[DomainBusinessError, Book]]
+  def remove(bookId: BookId): F[Either[DomainBusinessError, Unit]]
+  def update(book: Book): F[Either[DomainBusinessError, Book]]
 }

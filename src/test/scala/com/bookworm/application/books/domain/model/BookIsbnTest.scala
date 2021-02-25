@@ -13,12 +13,12 @@ class BookIsbnTest extends AbstractUnitTest {
 
     "return ValidationError#EmptyBookIsbn if the isbn provided is empty" in {
       val bookIsbnEither = BookIsbn.create("")
-      bookIsbnEither shouldBe Left(ValidationError.EmptyBookIsbn)
+      bookIsbnEither shouldBe Left(DomainValidationError.EmptyBookIsbn)
     }
 
     "return ValidationError#InvalidIsbnLength if the isbn provided is not 13 characters length" in {
       val bookIsbnEither = BookIsbn.create("1234")
-      bookIsbnEither shouldBe Left(ValidationError.InvalidIsbnLength)
+      bookIsbnEither shouldBe Left(DomainValidationError.InvalidIsbnLength)
     }
   }
 }

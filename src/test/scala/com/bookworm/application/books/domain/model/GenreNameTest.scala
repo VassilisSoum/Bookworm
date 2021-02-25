@@ -13,7 +13,7 @@ class GenreNameTest extends AbstractUnitTest {
 
     "return ValidationError#EmptyGenreName if the genre name provided is empty" in {
       val genreNameEither = GenreName.create("")
-      genreNameEither shouldBe Left(ValidationError.EmptyGenreName)
+      genreNameEither shouldBe Left(DomainValidationError.EmptyGenreName)
     }
   }
 }

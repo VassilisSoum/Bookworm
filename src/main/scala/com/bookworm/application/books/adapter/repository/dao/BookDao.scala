@@ -93,4 +93,14 @@ class BookDao @Inject() (clock: Clock) {
         else BookStatus.Unavailable
       }
   }
+
+  def updateBook(book: Book): doobie.ConnectionIO[Unit] = {
+    val bookAuthorData = book.bookDetails.authors.flatMap(authorId => List((book.bookId.id, authorId.id)))
+    for {
+      _ <- Update[(UUID, UUID)]("delete from bookworm.book_author ba where ba.bookId = ? and ba.authorId = ?")
+        .updateMany(bookAuthorData)
+      _ <- sql"""delete from bookworm.book b where b.bookId = ${book.bookId.id}""".update.run
+      _ <- insertBook(book)
+    } yield ()
+  }
 }

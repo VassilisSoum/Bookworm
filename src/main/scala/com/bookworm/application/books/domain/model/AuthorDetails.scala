@@ -8,8 +8,8 @@ sealed abstract case class AuthorFirstName private[AuthorFirstName](firstName: S
 
 object AuthorFirstName {
 
-  def create(firstName: String): Either[ValidationError, AuthorFirstName] =
-    if (firstName.isEmpty) Left(ValidationError.EmptyAuthorFirstName)
+  def create(firstName: String): Either[DomainValidationError, AuthorFirstName] =
+    if (firstName.isEmpty) Left(DomainValidationError.EmptyAuthorFirstName)
     else
       Right(new AuthorFirstName(firstName) {})
 }
@@ -22,8 +22,8 @@ sealed abstract case class AuthorLastName private[AuthorLastName](lastName: Stri
 
 object AuthorLastName {
 
-  def create(lastName: String): Either[ValidationError, AuthorLastName] =
-    if (lastName.isEmpty) Left(ValidationError.EmptyAuthorLastName)
+  def create(lastName: String): Either[DomainValidationError, AuthorLastName] =
+    if (lastName.isEmpty) Left(DomainValidationError.EmptyAuthorLastName)
     else
       Right(new AuthorLastName(lastName) {})
 }

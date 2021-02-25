@@ -8,8 +8,8 @@ sealed abstract case class GenreName private[GenreName](genre: String) {
 
 object GenreName {
 
-  def create(genre: String): Either[ValidationError, GenreName] =
-    if (genre.isEmpty) Left(ValidationError.EmptyGenreName)
+  def create(genre: String): Either[DomainValidationError, GenreName] =
+    if (genre.isEmpty) Left(DomainValidationError.EmptyGenreName)
     else
       Right(new GenreName(genre) {})
 }

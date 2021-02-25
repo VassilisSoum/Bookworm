@@ -14,13 +14,13 @@ class PaginationLimitTest extends AbstractUnitTest {
     "return ValidationError#NonPositivePaginationLimit when the provided limit is non-positive" in {
       val limit = -1
 
-      PaginationLimit.create(limit).left.toOption.get shouldBe ValidationError.NonPositivePaginationLimit
+      PaginationLimit.create(limit).left.toOption.get shouldBe DomainValidationError.NonPositivePaginationLimit
     }
 
     "return ValidationError#PaginationLimitExceedsMaximum when the provided limit exceeds maximum" in {
       val limit = 1000
 
-      PaginationLimit.create(limit).left.toOption.get shouldBe ValidationError.PaginationLimitExceedsMaximum
+      PaginationLimit.create(limit).left.toOption.get shouldBe DomainValidationError.PaginationLimitExceedsMaximum
     }
   }
 }

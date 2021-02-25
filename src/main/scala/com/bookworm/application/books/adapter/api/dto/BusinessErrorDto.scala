@@ -1,25 +1,25 @@
 package com.bookworm.application.books.adapter.api.dto
 
 import com.bookworm.application.books.adapter.api.formats
-import com.bookworm.application.books.domain.model.BusinessError
-import com.bookworm.application.books.domain.model.BusinessError.{BookDoesNotExist, OneOrMoreAuthorsDoNotExist}
+import com.bookworm.application.books.domain.model.DomainBusinessError
+import com.bookworm.application.books.domain.model.DomainBusinessError.{BookDoesNotExist, OneOrMoreAuthorsDoNotExist}
 import org.json4s.JsonAST.JString
 import org.json4s.{CustomSerializer, Extraction, JValue, JsonFormat}
 
-case class BusinessErrorDto(errorType: BusinessError, message: String)
+case class BusinessErrorDto(errorType: DomainBusinessError, message: String)
 
 object BusinessErrorDto {
 
   final case object BusinessErrorSerializer
-    extends CustomSerializer[BusinessError](_ =>
+    extends CustomSerializer[DomainBusinessError](_ =>
       (
         { case JString(businessError) =>
           businessError match {
-            case "OneOrMoreAuthorsDoNotExist" => BusinessError.OneOrMoreAuthorsDoNotExist
-            case "BookDoesNotExist"           => BusinessError.BookDoesNotExist
+            case "OneOrMoreAuthorsDoNotExist" => DomainBusinessError.OneOrMoreAuthorsDoNotExist
+            case "BookDoesNotExist"           => DomainBusinessError.BookDoesNotExist
           }
         },
-        { case businessError: BusinessError =>
+        { case businessError: DomainBusinessError =>
           JString(businessError.toString)
         }
       )
@@ -34,11 +34,11 @@ object BusinessErrorDto {
       value.extract[BusinessErrorDto]
   }
 
-  def fromDomain(businessError: BusinessError): BusinessErrorDto =
+  def fromDomain(businessError: DomainBusinessError): BusinessErrorDto =
     businessError match {
       case OneOrMoreAuthorsDoNotExist =>
-        BusinessErrorDto(BusinessError.OneOrMoreAuthorsDoNotExist, "Book contains one or more unknown authors")
+        BusinessErrorDto(DomainBusinessError.OneOrMoreAuthorsDoNotExist, "Book contains one or more unknown authors")
       case BookDoesNotExist =>
-        BusinessErrorDto(BusinessError.BookDoesNotExist, "Book does not exist")
+        BusinessErrorDto(DomainBusinessError.BookDoesNotExist, "Book does not exist")
     }
 }

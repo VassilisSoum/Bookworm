@@ -36,25 +36,34 @@ private[repository] class BookRepositoryImpl @Inject() (
       }
     }
 
-  override def add(book: Book): IO[Either[BusinessError, Book]] =
+  override def add(book: Book): IO[Either[DomainBusinessError, Book]] =
     authorDao.allAuthorsExist(book.bookDetails.authors).transact(transactor).flatMap { allAuthorsExist =>
       if (allAuthorsExist) {
         bookDao.insertBook(book).transact(transactor).map(_ => Right(book))
       } else {
-        IO.pure(Left(BusinessError.OneOrMoreAuthorsDoNotExist))
+        IO.pure(Left(DomainBusinessError.OneOrMoreAuthorsDoNotExist))
       }
     }
 
-  override def getById(bookId: BookId): IO[Either[BusinessError, BookQueryModel]] =
+  override def getById(bookId: BookId): IO[Either[DomainBusinessError, BookQueryModel]] =
     bookDao.getOptionalBookById(bookId).transact(transactor).map {
       case Some(bookQueryModel) => Right(bookQueryModel)
-      case None                 => Left(BusinessError.BookDoesNotExist)
+      case None                 => Left(DomainBusinessError.BookDoesNotExist)
     }
 
-  override def remove(bookId: BookId): IO[Either[BusinessError, Unit]] =
+  override def remove(bookId: BookId): IO[Either[DomainBusinessError, Unit]] =
     bookDao.softDelete(bookId).transact(transactor).map {
-      case BookStatus.Available   => Left(BusinessError.BookDoesNotExist)
+      case BookStatus.Available   => Left(DomainBusinessError.BookDoesNotExist)
       case BookStatus.Unavailable => Right(())
+    }
+
+  override def update(book: Book): IO[Either[DomainBusinessError, Book]] =
+    authorDao.allAuthorsExist(book.bookDetails.authors).transact(transactor).flatMap { allAuthorsExist =>
+      if (allAuthorsExist) {
+        bookDao.updateBook(book).transact(transactor).map(_ => Right(book))
+      } else {
+        IO.pure(Left(DomainBusinessError.OneOrMoreAuthorsDoNotExist))
+      }
     }
 }
 

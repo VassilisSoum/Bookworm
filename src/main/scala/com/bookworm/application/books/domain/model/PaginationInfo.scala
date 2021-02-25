@@ -11,9 +11,9 @@ object ContinuationToken {
 
   val delimiter = "_"
 
-  def create(continuationToken: String): Either[ValidationError, ContinuationToken] =
-    if (continuationToken.isEmpty) Left(ValidationError.EmptyContinuationToken)
-    else if (continuationTokenIsInvalid(continuationToken)) Left(ValidationError.InvalidContinuationTokenFormat)
+  def create(continuationToken: String): Either[DomainValidationError, ContinuationToken] =
+    if (continuationToken.isEmpty) Left(DomainValidationError.EmptyContinuationToken)
+    else if (continuationTokenIsInvalid(continuationToken)) Left(DomainValidationError.InvalidContinuationTokenFormat)
     else
       Right(new ContinuationToken(continuationToken) {})
 
@@ -32,9 +32,9 @@ object PaginationLimit {
   private val maximumPaginationLimit: Int = 100
   val defaultPaginationLimit: Int = 10
 
-  def create(paginationLimit: Int): Either[ValidationError, PaginationLimit] =
-    if (paginationLimit <= 0) Left(ValidationError.NonPositivePaginationLimit)
-    else if (paginationLimit > maximumPaginationLimit) Left(ValidationError.PaginationLimitExceedsMaximum)
+  def create(paginationLimit: Int): Either[DomainValidationError, PaginationLimit] =
+    if (paginationLimit <= 0) Left(DomainValidationError.NonPositivePaginationLimit)
+    else if (paginationLimit > maximumPaginationLimit) Left(DomainValidationError.PaginationLimitExceedsMaximum)
     else
       Right(new PaginationLimit(paginationLimit) {})
 }

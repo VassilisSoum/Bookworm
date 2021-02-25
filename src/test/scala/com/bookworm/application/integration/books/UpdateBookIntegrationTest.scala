@@ -1,55 +1,71 @@
 package com.bookworm.application.integration.books
 
 import cats.effect.IO
-import com.bookworm.application.books.adapter.api.dto.{BusinessErrorDto, AddBookRequestDto, GetBooksResponseDto, ValidationErrorDto}
-import com.bookworm.application.books.domain.model.{DomainBusinessError, DomainValidationError}
+import cats.implicits.catsSyntaxApply
+import com.bookworm.application.books.adapter.api.dto.{BusinessErrorDto, GetBooksResponseDto, UpdateBookRequestDto, ValidationErrorDto}
+import com.bookworm.application.books.domain.model.{AuthorId, DomainBusinessError, DomainValidationError, GenreId, GenreName}
 import org.http4s.{Method, Request, Status, Uri}
 import org.scalatest.MustMatchers.convertToAnyMustWrapper
 
 import java.time.LocalDateTime
 import java.util.UUID
 
-class AddBookIntegrationTest extends TestData with BookEndpoints with EntityEncoders with EntityDecoders {
+class UpdateBookIntegrationTest extends TestData with BookEndpoints with EntityEncoders with EntityDecoders {
 
-  "Adding a book" should {
-    val createBookRequestDto = AddBookRequestDto(
-      testBookTitle.value,
-      testBookSummary.value,
-      testBookIsbn.value,
-      testGenreId.id.toString,
-      List(testAuthorId.id.toString)
-    )
-    "return 204 NO CONTENT and add the book" in {
+  "Updating a book" should {
+    val newGenreId = UUID.randomUUID()
+    val newGenreName = "New Genre"
+    val newAuthorIds = List(UUID.randomUUID())
+
+    val updateBookRequestDto =
+      UpdateBookRequestDto(
+        title = "New title",
+        summary = "New summary",
+        isbn = "0000000000000",
+        genreId = newGenreId.toString,
+        authorIds = newAuthorIds.map(_.toString)
+      )
+    "return 204 NO CONTENT when the update was successful" in {
       fakeClock.current = LocalDateTime
         .of(2025, 2, 7, 10, 0, 0)
         .atZone(fakeClock.zoneId)
         .toInstant
 
-      runInTransaction(insertIntoGenre(testGenre).flatMap(_ => insertIntoAuthor(testAuthor)))
+      setupInitialData()
 
-      val addBookRequest = Request[IO](Method.POST, Uri.unsafeFromString(s"/books")).withEntity(createBookRequestDto)
-      val addBookResponse = endpoint(addBookRequest)
+      runInTransaction(
+        insertIntoGenre(
+          testGenre.copy(genreId = GenreId(newGenreId), genreName = GenreName.create(newGenreName).toOption.get)
+        ) *> insertIntoAuthor(
+          testAuthor.copy(authorId = AuthorId(newAuthorIds.head))
+        )
+      )
+
+      val updateBookRequest =
+        Request[IO](Method.PUT, Uri.unsafeFromString(s"/books/${testBookId.id.toString}"))
+          .withEntity(updateBookRequestDto)
+      val updateBookResponse = endpoint(updateBookRequest)
         .unsafeRunSync()
-      addBookResponse.status mustBe Status.NoContent
+      updateBookResponse.status mustBe Status.NoContent
 
       val retrieveAllBooksRequest =
-        Request[IO](Method.GET, Uri.unsafeFromString(s"/genre/${testGenreId.id.toString}/books"))
+        Request[IO](Method.GET, Uri.unsafeFromString(s"/genre/${newGenreId.toString}/books"))
       val retrieveAllBooksResponse = endpoint(retrieveAllBooksRequest)
         .unsafeRunSync()
       retrieveAllBooksResponse.status mustBe Status.Ok
 
       val addedBook = retrieveAllBooksResponse.as[GetBooksResponseDto].unsafeRunSync().books.head
 
-      addedBook.genre mustBe testGenre.genreName.genre
-      addedBook.isbn mustBe testBookIsbn.value
-      addedBook.title mustBe testBookTitle.value
-      addedBook.summary mustBe testBookSummary.value
-      addedBook.bookId mustNot be(empty)
+      addedBook.genre mustBe newGenreName
+      addedBook.isbn mustBe updateBookRequestDto.isbn
+      addedBook.title mustBe updateBookRequestDto.title
+      addedBook.summary mustBe updateBookRequestDto.summary
+      addedBook.bookId mustBe testBookId.id.toString
     }
-
     "return 400 BAD REQUEST with error type EmptyBookTitle when the title of the book is empty" in {
       val request =
-        Request[IO](Method.POST, Uri.unsafeFromString(s"/books")).withEntity(createBookRequestDto.copy(title = ""))
+        Request[IO](Method.PUT, Uri.unsafeFromString(s"/books/${testBookId.id.toString}"))
+          .withEntity(updateBookRequestDto.copy(title = ""))
       val response = endpoint(request)
         .unsafeRunSync()
       response.status mustBe Status.BadRequest
@@ -58,7 +74,8 @@ class AddBookIntegrationTest extends TestData with BookEndpoints with EntityEnco
 
     "return 400 BAD REQUEST with error type EmptyBookSummary when the summary of the book is empty" in {
       val request =
-        Request[IO](Method.POST, Uri.unsafeFromString(s"/books")).withEntity(createBookRequestDto.copy(summary = ""))
+        Request[IO](Method.PUT, Uri.unsafeFromString(s"/books/${testBookId.id.toString}"))
+          .withEntity(updateBookRequestDto.copy(summary = ""))
       val response = endpoint(request)
         .unsafeRunSync()
       response.status mustBe Status.BadRequest
@@ -67,7 +84,8 @@ class AddBookIntegrationTest extends TestData with BookEndpoints with EntityEnco
 
     "return 400 BAD REQUEST with error type EmptyBookIsbn when the isbn of the book is empty" in {
       val request =
-        Request[IO](Method.POST, Uri.unsafeFromString(s"/books")).withEntity(createBookRequestDto.copy(isbn = ""))
+        Request[IO](Method.PUT, Uri.unsafeFromString(s"/books/${testBookId.id.toString}"))
+          .withEntity(updateBookRequestDto.copy(isbn = ""))
       val response = endpoint(request)
         .unsafeRunSync()
       response.status mustBe Status.BadRequest
@@ -76,7 +94,8 @@ class AddBookIntegrationTest extends TestData with BookEndpoints with EntityEnco
 
     "return 400 BAD REQUEST with error type InvalidIsbnLength when the isbn of the book is not 13 characters" in {
       val request =
-        Request[IO](Method.POST, Uri.unsafeFromString(s"/books")).withEntity(createBookRequestDto.copy(isbn = "123"))
+        Request[IO](Method.PUT, Uri.unsafeFromString(s"/books/${testBookId.id.toString}"))
+          .withEntity(updateBookRequestDto.copy(isbn = "123"))
       val response = endpoint(request)
         .unsafeRunSync()
       response.status mustBe Status.BadRequest
@@ -85,8 +104,8 @@ class AddBookIntegrationTest extends TestData with BookEndpoints with EntityEnco
 
     "return 400 BAD REQUEST with error type EmptyBookAuthorList when the provided list of authors field in the request is empty" in {
       val request =
-        Request[IO](Method.POST, Uri.unsafeFromString(s"/books"))
-          .withEntity(createBookRequestDto.copy(authorIds = List.empty))
+        Request[IO](Method.PUT, Uri.unsafeFromString(s"/books/${testBookId.id.toString}"))
+          .withEntity(updateBookRequestDto.copy(authorIds = List.empty))
       val response = endpoint(request)
         .unsafeRunSync()
       response.status mustBe Status.BadRequest
@@ -95,8 +114,8 @@ class AddBookIntegrationTest extends TestData with BookEndpoints with EntityEnco
 
     "return 400 BAD REQUEST with error type InvalidBookGenre when the provided genre id is not a uuid" in {
       val request =
-        Request[IO](Method.POST, Uri.unsafeFromString(s"/books"))
-          .withEntity(createBookRequestDto.copy(genreId = "unknown"))
+        Request[IO](Method.PUT, Uri.unsafeFromString(s"/books/${testBookId.id.toString}"))
+          .withEntity(updateBookRequestDto.copy(genreId = "unknown"))
       val response = endpoint(request)
         .unsafeRunSync()
       response.status mustBe Status.BadRequest
@@ -105,8 +124,8 @@ class AddBookIntegrationTest extends TestData with BookEndpoints with EntityEnco
 
     "return 409 CONFLICT with error type OneOrMoreAuthorsDoNotExist when one or more authors do not exist" in {
       val request =
-        Request[IO](Method.POST, Uri.unsafeFromString(s"/books"))
-          .withEntity(createBookRequestDto.copy(authorIds = List(testAuthorId.id.toString, UUID.randomUUID().toString)))
+        Request[IO](Method.PUT, Uri.unsafeFromString(s"/books/${testBookId.id.toString}"))
+          .withEntity(updateBookRequestDto.copy(authorIds = List(testAuthorId.id.toString, UUID.randomUUID().toString)))
       val response = endpoint(request)
         .unsafeRunSync()
       response.status mustBe Status.Conflict

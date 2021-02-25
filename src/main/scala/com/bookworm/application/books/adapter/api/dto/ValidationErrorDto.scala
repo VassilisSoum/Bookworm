@@ -1,17 +1,17 @@
 package com.bookworm.application.books.adapter.api.dto
 
 import com.bookworm.application.books.adapter.api.formats
-import com.bookworm.application.books.domain.model.ValidationError
-import com.bookworm.application.books.domain.model.ValidationError._
+import com.bookworm.application.books.domain.model.DomainValidationError
+import com.bookworm.application.books.domain.model.DomainValidationError._
 import org.json4s.JsonAST.JString
 import org.json4s.{CustomSerializer, _}
 
-case class ValidationErrorDto(errorType: ValidationError, message: String)
+case class ValidationErrorDto(errorType: DomainValidationError, message: String)
 
 object ValidationErrorDto {
 
   final case object ValidationErrorSerializer
-    extends CustomSerializer[ValidationError](_ =>
+    extends CustomSerializer[DomainValidationError](_ =>
       (
         { case JString(validationError) =>
           validationError match {
@@ -28,9 +28,10 @@ object ValidationErrorDto {
             case "InvalidIsbnLength"              => InvalidIsbnLength
             case "EmptyBookAuthorList"            => EmptyBookAuthorList
             case "InvalidBookGenre"               => InvalidBookGenre
+            case "InvalidBookId"                  => InvalidBookId
           }
         },
-        { case validationError: ValidationError =>
+        { case validationError: DomainValidationError =>
           JString(validationError.toString)
         }
       )
@@ -45,48 +46,53 @@ object ValidationErrorDto {
       value.extract[ValidationErrorDto]
   }
 
-  def fromDomain(validationError: ValidationError): ValidationErrorDto =
+  def fromDomain(validationError: DomainValidationError): ValidationErrorDto =
     validationError match {
       case EmptyBookTitle =>
-        ValidationErrorDto(ValidationError.EmptyBookTitle, "Book title cannot be empty")
+        ValidationErrorDto(DomainValidationError.EmptyBookTitle, "Book title cannot be empty")
       case EmptyBookSummary =>
-        ValidationErrorDto(ValidationError.EmptyBookSummary, "Book summary cannot be empty")
+        ValidationErrorDto(DomainValidationError.EmptyBookSummary, "Book summary cannot be empty")
       case EmptyBookIsbn =>
-        ValidationErrorDto(ValidationError.EmptyBookIsbn, "Book isbn cannot be empty")
+        ValidationErrorDto(DomainValidationError.EmptyBookIsbn, "Book isbn cannot be empty")
       case EmptyAuthorFirstName =>
-        ValidationErrorDto(ValidationError.EmptyAuthorFirstName, "Author first name cannot be empty")
+        ValidationErrorDto(DomainValidationError.EmptyAuthorFirstName, "Author first name cannot be empty")
       case EmptyAuthorLastName =>
-        ValidationErrorDto(ValidationError.EmptyAuthorLastName, "Author last name cannot be empty")
+        ValidationErrorDto(DomainValidationError.EmptyAuthorLastName, "Author last name cannot be empty")
       case EmptyGenreName =>
-        ValidationErrorDto(ValidationError.EmptyGenreName, "Genre name cannot be empty")
+        ValidationErrorDto(DomainValidationError.EmptyGenreName, "Genre name cannot be empty")
       case EmptyContinuationToken =>
         ValidationErrorDto(
-          ValidationError.EmptyContinuationToken,
+          DomainValidationError.EmptyContinuationToken,
           "Continuation pagination token cannot be empty"
         )
       case InvalidContinuationTokenFormat =>
-        ValidationErrorDto(ValidationError.InvalidContinuationTokenFormat, "Continuation token format is invalid")
+        ValidationErrorDto(DomainValidationError.InvalidContinuationTokenFormat, "Continuation token format is invalid")
       case NonPositivePaginationLimit =>
         ValidationErrorDto(
-          ValidationError.NonPositivePaginationLimit,
+          DomainValidationError.NonPositivePaginationLimit,
           "Pagination limit must be a positive number"
         )
       case PaginationLimitExceedsMaximum =>
         ValidationErrorDto(
-          ValidationError.PaginationLimitExceedsMaximum,
+          DomainValidationError.PaginationLimitExceedsMaximum,
           "Pagination limit is too large"
         )
       case InvalidIsbnLength =>
-        ValidationErrorDto(ValidationError.InvalidIsbnLength, "Isbn should be 13 characters long")
+        ValidationErrorDto(DomainValidationError.InvalidIsbnLength, "Isbn should be 13 characters long")
       case EmptyBookAuthorList =>
         ValidationErrorDto(
-          ValidationError.EmptyBookAuthorList,
+          DomainValidationError.EmptyBookAuthorList,
           "List of book authors cannot be empty when adding a book"
         )
       case InvalidBookGenre =>
         ValidationErrorDto(
-          ValidationError.InvalidBookGenre,
+          DomainValidationError.InvalidBookGenre,
           "Genre is not valid"
+        )
+      case InvalidBookId =>
+        ValidationErrorDto(
+          DomainValidationError.InvalidBookId,
+          "Book id is not valid"
         )
     }
 }
