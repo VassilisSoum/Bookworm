@@ -11,6 +11,8 @@ case class BookQueryModel(
     summary: String,
     isbn: String,
     genre: String,
+    minPrice: Long,
+    maxPrice: Long,
     updatedAt: LocalDateTime,
     id: Long
 )

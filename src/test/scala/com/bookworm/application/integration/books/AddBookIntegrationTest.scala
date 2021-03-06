@@ -1,7 +1,7 @@
 package com.bookworm.application.integration.books
 
 import cats.effect.IO
-import com.bookworm.application.books.adapter.api.dto.{BusinessErrorDto, AddBookRequestDto, GetBooksResponseDto, ValidationErrorDto}
+import com.bookworm.application.books.adapter.api.dto.{AddBookRequestDto, BusinessErrorDto, GetBooksResponseDto, ValidationErrorDto}
 import com.bookworm.application.books.domain.model.{DomainBusinessError, DomainValidationError}
 import org.http4s.{Method, Request, Status, Uri}
 import org.scalatest.MustMatchers.convertToAnyMustWrapper
@@ -17,7 +17,9 @@ class AddBookIntegrationTest extends TestData with BookEndpoints with EntityEnco
       testBookSummary.value,
       testBookIsbn.value,
       testGenreId.id.toString,
-      List(testAuthorId.id.toString)
+      List(testAuthorId.id.toString),
+      testBookMinPrice.value,
+      testBookMaxPrice.value
     )
     "return 204 NO CONTENT and add the book" in {
       fakeClock.current = LocalDateTime
@@ -45,6 +47,8 @@ class AddBookIntegrationTest extends TestData with BookEndpoints with EntityEnco
       addedBook.title mustBe testBookTitle.value
       addedBook.summary mustBe testBookSummary.value
       addedBook.bookId mustNot be(empty)
+      addedBook.minPrice mustBe testBookMinPrice.value
+      addedBook.maxPrice mustBe testBookMaxPrice.value
     }
 
     "return 400 BAD REQUEST with error type EmptyBookTitle when the title of the book is empty" in {
@@ -101,6 +105,27 @@ class AddBookIntegrationTest extends TestData with BookEndpoints with EntityEnco
         .unsafeRunSync()
       response.status mustBe Status.BadRequest
       response.as[ValidationErrorDto].unsafeRunSync().errorType mustBe DomainValidationError.InvalidBookGenre
+    }
+
+    "return 400 BAD REQUEST with error type NegativeBookPrice when the provided book price is negative" in {
+      val request =
+        Request[IO](Method.POST, Uri.unsafeFromString(s"/books"))
+          .withEntity(createBookRequestDto.copy(minPrice = -5000L))
+      val response = endpoint(request)
+        .unsafeRunSync()
+      response.status mustBe Status.BadRequest
+      response.as[ValidationErrorDto].unsafeRunSync().errorType mustBe DomainValidationError.NegativeBookPrice
+    }
+
+    "return 400 BAD REQUEST with error type MaxPriceLessThanMinPrice when the provided max book price is less than " +
+      "min book price" in {
+      val request =
+        Request[IO](Method.POST, Uri.unsafeFromString(s"/books"))
+          .withEntity(createBookRequestDto.copy(maxPrice = createBookRequestDto.minPrice - 1L))
+      val response = endpoint(request)
+        .unsafeRunSync()
+      response.status mustBe Status.BadRequest
+      response.as[ValidationErrorDto].unsafeRunSync().errorType mustBe DomainValidationError.MaxPriceLessThanMinPrice
     }
 
     "return 409 CONFLICT with error type OneOrMoreAuthorsDoNotExist when one or more authors do not exist" in {

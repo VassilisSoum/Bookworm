@@ -13,7 +13,9 @@ case class AddBookRequestDto(
     summary: String,
     isbn: String,
     genreId: String,
-    authorIds: List[String]
+    authorIds: List[String],
+    minPrice: Long,
+    maxPrice: Long
 )
 
 object AddBookRequestDto {
@@ -38,17 +40,16 @@ object AddBookRequestDto {
         genreId <- Try(UUID.fromString(addBookRequestDto.genreId)).toEither.left.map(_ =>
           DomainValidationError.InvalidBookGenre
         )
+        minPrice <- BookPrice.create(addBookRequestDto.minPrice)
+        maxPrice <- BookPrice.create(addBookRequestDto.maxPrice)
         bookId = BookId(UUID.randomUUID())
+        genre = GenreId(genreId)
+        authors = authorIds.toList.map(authorId => AuthorId(UUID.fromString(authorId)))
+        bookDetails <- BookDetails.create(title, summary, isbn, genre, authors, minPrice, maxPrice)
         book = Book(
           bookId,
-          BookDetails(
-            title,
-            summary,
-            isbn,
-            GenreId(genreId),
-            authorIds.toList.map(authorId => AuthorId(UUID.fromString(authorId)))
-          ),
-          BookStatus.Available
+          bookDetails,
+          bookStatus = BookStatus.Available
         )
       } yield book
   }

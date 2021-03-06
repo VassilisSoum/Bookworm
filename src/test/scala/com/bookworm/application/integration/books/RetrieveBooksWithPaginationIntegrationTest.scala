@@ -51,28 +51,36 @@ class RetrieveBooksWithPaginationIntegrationTest extends TestData with BookEndpo
           title = testBookTitle.value,
           summary = testBookSummary.value,
           isbn = testBookIsbn.value,
-          genre = testGenre.genreName.genre
+          genre = testGenre.genreName.genre,
+          minPrice = testBookMinPrice.value,
+          maxPrice = testBookMaxPrice.value
         ),
         BookResponseDto(
           bookId = bookId4.toString,
           title = testBookTitle.value,
           summary = testBookSummary.value,
           isbn = testBookIsbn.value,
-          genre = testGenre.genreName.genre
+          genre = testGenre.genreName.genre,
+          minPrice = testBookMinPrice.value,
+          maxPrice = testBookMaxPrice.value
         ),
         BookResponseDto(
           bookId = bookId3.toString,
           title = testBookTitle.value,
           summary = testBookSummary.value,
           isbn = testBookIsbn.value,
-          genre = testGenre.genreName.genre
+          genre = testGenre.genreName.genre,
+          minPrice = testBookMinPrice.value,
+          maxPrice = testBookMaxPrice.value
         ),
         BookResponseDto(
           bookId = bookId2.toString,
           title = testBookTitle.value,
           summary = testBookSummary.value,
           isbn = testBookIsbn.value,
-          genre = testGenre.genreName.genre
+          genre = testGenre.genreName.genre,
+          minPrice = testBookMinPrice.value,
+          maxPrice = testBookMaxPrice.value
         )
       )
 
@@ -99,7 +107,9 @@ class RetrieveBooksWithPaginationIntegrationTest extends TestData with BookEndpo
           title = testBookTitle.value,
           summary = testBookSummary.value,
           isbn = testBookIsbn.value,
-          genre = testGenre.genreName.genre
+          genre = testGenre.genreName.genre,
+          minPrice = testBookMinPrice.value,
+          maxPrice = testBookMaxPrice.value
         )
       )
 

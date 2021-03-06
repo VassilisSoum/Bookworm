@@ -8,15 +8,28 @@ import java.util.UUID
 
 abstract class AbstractUnitTest extends WordSpec with Matchers with MockFactory {
 
-  val testBook = Book(
+  val testBookTitle = BookTitle.create("title").toOption.get
+  val testBookSummary = BookSummary.create("summary").toOption.get
+  val testBookGenreId = GenreId(UUID.randomUUID())
+  val testBookAuthors = List(AuthorId(UUID.randomUUID()))
+  val testBookIsbn = BookIsbn.create("9781234567897").toOption.get
+  val testBookMinPrice = BookPrice.create(1000L).toOption.get
+  val testBookMaxPrice = BookPrice.create(5000L).toOption.get
+
+  val testBook: Book = Book(
     bookId = BookId(UUID.randomUUID()),
-    bookDetails = BookDetails(
-      BookTitle.create("title").toOption.get,
-      BookSummary.create("summary").toOption.get,
-      BookIsbn.create("9781234567897").toOption.get,
-      GenreId(UUID.randomUUID()),
-      List(AuthorId(UUID.randomUUID()))
-    ),
+    bookDetails = BookDetails
+      .create(
+        title = testBookTitle,
+        summary = testBookSummary,
+        isbn = testBookIsbn,
+        genre = testBookGenreId,
+        authors = testBookAuthors,
+        minPrice = testBookMinPrice,
+        maxPrice = testBookMaxPrice
+      )
+      .toOption
+      .get,
     bookStatus = BookStatus.Available
   )
 }

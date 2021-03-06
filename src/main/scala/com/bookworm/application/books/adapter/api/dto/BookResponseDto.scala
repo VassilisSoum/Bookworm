@@ -9,7 +9,9 @@ final case class BookResponseDto(
     title: String,
     summary: String,
     isbn: String,
-    genre: String
+    genre: String,
+    minPrice: Long,
+    maxPrice: Long
 )
 
 object BookResponseDto {
@@ -31,7 +33,9 @@ object BookResponseDto {
         title = bookQueryModel.title,
         summary = bookQueryModel.summary,
         isbn = bookQueryModel.isbn,
-        genre = bookQueryModel.genre
+        genre = bookQueryModel.genre,
+        minPrice = bookQueryModel.minPrice,
+        maxPrice = bookQueryModel.maxPrice
       )
   }
 }

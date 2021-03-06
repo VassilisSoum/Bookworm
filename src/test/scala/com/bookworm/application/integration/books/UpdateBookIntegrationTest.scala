@@ -23,7 +23,9 @@ class UpdateBookIntegrationTest extends TestData with BookEndpoints with EntityE
         summary = "New summary",
         isbn = "0000000000000",
         genreId = newGenreId.toString,
-        authorIds = newAuthorIds.map(_.toString)
+        authorIds = newAuthorIds.map(_.toString),
+        minPrice = 0L,
+        maxPrice = 1000L
       )
     "return 204 NO CONTENT when the update was successful" in {
       fakeClock.current = LocalDateTime
@@ -61,6 +63,8 @@ class UpdateBookIntegrationTest extends TestData with BookEndpoints with EntityE
       addedBook.title mustBe updateBookRequestDto.title
       addedBook.summary mustBe updateBookRequestDto.summary
       addedBook.bookId mustBe testBookId.id.toString
+      addedBook.minPrice mustBe updateBookRequestDto.minPrice
+      addedBook.maxPrice mustBe updateBookRequestDto.maxPrice
     }
     "return 400 BAD REQUEST with error type EmptyBookTitle when the title of the book is empty" in {
       val request =

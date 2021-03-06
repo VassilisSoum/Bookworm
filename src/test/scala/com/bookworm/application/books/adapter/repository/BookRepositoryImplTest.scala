@@ -1,7 +1,7 @@
 package com.bookworm.application.books.adapter.repository
 
 import cats.implicits.catsSyntaxApply
-import com.bookworm.application.books.domain.model.{AuthorId, BookId, BookIsbn, BookSummary, BookTitle, DomainBusinessError, Genre, GenreId, GenreName}
+import com.bookworm.application.books.domain.model._
 import com.bookworm.application.books.domain.port.inbound.query.BookQueryModel
 import com.bookworm.application.integration.books.TestData
 import org.scalatest.MustMatchers.convertToAnyMustWrapper
@@ -33,6 +33,7 @@ class BookRepositoryImplTest extends TestData {
       addedBook.summary mustBe testBookSummary.value
       addedBook.title mustBe testBookTitle.value
       addedBook.updatedAt mustBe LocalDateTime.ofInstant(fakeClock.current, fakeClock.zoneId)
+      addedBook.minPrice mustBe testBookMinPrice.value
     }
 
     "Return BookDoesNotExist when retrieving a book that does not exist" in {
@@ -43,8 +44,21 @@ class BookRepositoryImplTest extends TestData {
     }
 
     "Update the title of an existing book" in {
-      val bookTitle = BookTitle.create("Updated").toOption.get
-      val expectedBook = testBook.copy(bookDetails = testBook.bookDetails.copy(title = bookTitle))
+      val updatedBookTitle = BookTitle.create("Updated").toOption.get
+      val expectedBook = testBook.copy(bookDetails =
+        BookDetails
+          .create(
+            updatedBookTitle,
+            testBookSummary,
+            testBookIsbn,
+            testGenreId,
+            List(testAuthorId),
+            testBookMinPrice,
+            testBookMaxPrice
+          )
+          .toOption
+          .get
+      )
       val response =
         bookRepository.update(expectedBook).unsafeRunSync()
 
@@ -53,8 +67,21 @@ class BookRepositoryImplTest extends TestData {
     }
 
     "Update the summary of an existing book" in {
-      val bookSummary = BookSummary.create("Updated").toOption.get
-      val expectedBook = testBook.copy(bookDetails = testBook.bookDetails.copy(summary = bookSummary))
+      val updatedBookSummary = BookSummary.create("Updated").toOption.get
+      val expectedBook = testBook.copy(bookDetails =
+        BookDetails
+          .create(
+            testBookTitle,
+            updatedBookSummary,
+            testBookIsbn,
+            testGenreId,
+            List(testAuthorId),
+            testBookMinPrice,
+            testBookMaxPrice
+          )
+          .toOption
+          .get
+      )
       val response =
         bookRepository.update(expectedBook).unsafeRunSync()
 
@@ -63,8 +90,21 @@ class BookRepositoryImplTest extends TestData {
     }
 
     "Update the isbn of an existing book" in {
-      val bookIsbn = BookIsbn.create("0000000000000").toOption.get
-      val expectedBook = testBook.copy(bookDetails = testBook.bookDetails.copy(isbn = bookIsbn))
+      val updatedBookIsbn = BookIsbn.create("0000000000000").toOption.get
+      val expectedBook = testBook.copy(bookDetails =
+        BookDetails
+          .create(
+            testBookTitle,
+            testBookSummary,
+            updatedBookIsbn,
+            testGenreId,
+            List(testAuthorId),
+            testBookMinPrice,
+            testBookMaxPrice
+          )
+          .toOption
+          .get
+      )
       val response =
         bookRepository.update(expectedBook).unsafeRunSync()
 
@@ -73,9 +113,22 @@ class BookRepositoryImplTest extends TestData {
     }
 
     "Update the genre id of an existing book" in {
-      val genreId = GenreId(UUID.randomUUID())
-      runInTransaction(insertIntoGenre(Genre(genreId, GenreName.create("New Genre").toOption.get)))
-      val expectedBook = testBook.copy(bookDetails = testBook.bookDetails.copy(genre = genreId))
+      val updatedGenreId = GenreId(UUID.randomUUID())
+      runInTransaction(insertIntoGenre(Genre(updatedGenreId, GenreName.create("New Genre").toOption.get)))
+      val expectedBook = testBook.copy(bookDetails =
+        BookDetails
+          .create(
+            testBookTitle,
+            testBookSummary,
+            testBookIsbn,
+            updatedGenreId,
+            List(testAuthorId),
+            testBookMinPrice,
+            testBookMaxPrice
+          )
+          .toOption
+          .get
+      )
 
       val response = bookRepository.update(expectedBook).unsafeRunSync()
 
@@ -84,9 +137,68 @@ class BookRepositoryImplTest extends TestData {
     }
 
     "Update the authors of an existing book" in {
-      val authorId = AuthorId(UUID.randomUUID())
-      runInTransaction(insertIntoAuthor(testAuthor.copy(authorId = authorId)))
-      val expectedBook = testBook.copy(bookDetails = testBook.bookDetails.copy(authors = List(authorId)))
+      val updatedAuthorId = AuthorId(UUID.randomUUID())
+      runInTransaction(insertIntoAuthor(testAuthor.copy(authorId = updatedAuthorId)))
+      val expectedBook = testBook.copy(bookDetails =
+        BookDetails
+          .create(
+            testBookTitle,
+            testBookSummary,
+            testBookIsbn,
+            testGenreId,
+            List(updatedAuthorId),
+            testBookMinPrice,
+            testBookMaxPrice
+          )
+          .toOption
+          .get
+      )
+
+      val response = bookRepository.update(expectedBook).unsafeRunSync()
+
+      response.isRight mustBe true
+      response.toOption.get mustBe expectedBook
+    }
+
+    "Update the minPrice of an existing book" in {
+      val updatedMinBookPrice = BookPrice.create(0L).toOption.get
+      val expectedBook = testBook.copy(bookDetails =
+        BookDetails
+          .create(
+            testBookTitle,
+            testBookSummary,
+            testBookIsbn,
+            testGenreId,
+            List(testAuthorId),
+            updatedMinBookPrice,
+            testBookMaxPrice
+          )
+          .toOption
+          .get
+      )
+
+      val response = bookRepository.update(expectedBook).unsafeRunSync()
+
+      response.isRight mustBe true
+      response.toOption.get mustBe expectedBook
+    }
+
+    "Update the maxPrice of an existing book" in {
+      val updatedMaxBookPrice = BookPrice.create(testBookMinPrice.value + 1000L).toOption.get
+      val expectedBook = testBook.copy(bookDetails =
+        BookDetails
+          .create(
+            testBookTitle,
+            testBookSummary,
+            testBookIsbn,
+            testGenreId,
+            List(testAuthorId),
+            testBookMinPrice,
+            updatedMaxBookPrice
+          )
+          .toOption
+          .get
+      )
 
       val response = bookRepository.update(expectedBook).unsafeRunSync()
 
@@ -97,7 +209,20 @@ class BookRepositoryImplTest extends TestData {
     "Return OneOrMoreAuthorsDoNotExist when updating an existing book with at least one author that does not exist" in {
       val newAuthorId = AuthorId(UUID.randomUUID())
       val expectedBook =
-        testBook.copy(bookDetails = testBook.bookDetails.copy(authors = List(newAuthorId, testAuthorId)))
+        testBook.copy(bookDetails =
+          BookDetails
+            .create(
+              testBookTitle,
+              testBookSummary,
+              testBookIsbn,
+              testGenreId,
+              List(newAuthorId, testAuthorId),
+              testBookMinPrice,
+              testBookMaxPrice
+            )
+            .toOption
+            .get
+        )
 
       val response = bookRepository.update(expectedBook).unsafeRunSync()
 

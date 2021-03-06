@@ -26,7 +26,9 @@ class RetrieveBooksWithoutPaginationIntegrationTest extends TestData with BookEn
             title = testBookTitle.value,
             summary = testBookSummary.value,
             isbn = testBookIsbn.value,
-            genre = testGenre.genreName.genre
+            genre = testGenre.genreName.genre,
+            minPrice = testBookMinPrice.value,
+            maxPrice = testBookMaxPrice.value
           )
         )
         val expectedResponse = GetBooksResponseDto(

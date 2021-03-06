@@ -17,4 +17,6 @@ object DomainValidationError {
   final case object EmptyBookAuthorList extends DomainValidationError
   final case object InvalidBookGenre extends DomainValidationError
   final case object InvalidBookId extends DomainValidationError
+  final case object NegativeBookPrice extends DomainValidationError
+  final case object MaxPriceLessThanMinPrice extends DomainValidationError
 }

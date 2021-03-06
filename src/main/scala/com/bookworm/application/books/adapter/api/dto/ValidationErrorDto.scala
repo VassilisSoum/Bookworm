@@ -29,6 +29,8 @@ object ValidationErrorDto {
             case "EmptyBookAuthorList"            => EmptyBookAuthorList
             case "InvalidBookGenre"               => InvalidBookGenre
             case "InvalidBookId"                  => InvalidBookId
+            case "NegativeBookPrice"              => NegativeBookPrice
+            case "MaxPriceLessThanMinPrice"       => MaxPriceLessThanMinPrice
           }
         },
         { case validationError: DomainValidationError =>
@@ -93,6 +95,16 @@ object ValidationErrorDto {
         ValidationErrorDto(
           DomainValidationError.InvalidBookId,
           "Book id is not valid"
+        )
+      case NegativeBookPrice =>
+        ValidationErrorDto(
+          DomainValidationError.NegativeBookPrice,
+          "Book price must not be negative"
+        )
+      case MaxPriceLessThanMinPrice =>
+        ValidationErrorDto(
+          DomainValidationError.MaxPriceLessThanMinPrice,
+          "Max price cannot be less than min price"
         )
     }
 }

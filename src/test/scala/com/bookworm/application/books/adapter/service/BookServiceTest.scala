@@ -33,7 +33,9 @@ class BookServiceTest extends AbstractUnitTest {
           isbn = "ISBN123",
           genre = "Fantasy",
           updatedAt = updatedTimestampOfSecondBook,
-          id = id2
+          id = id2,
+          minPrice = 100L,
+          maxPrice = 500L
         ),
         BookQueryModel(
           bookId = bookId1.id,
@@ -42,7 +44,9 @@ class BookServiceTest extends AbstractUnitTest {
           isbn = "ISBN1234546",
           genre = "Fantasy",
           updatedAt = updatedTimestampOfFirstBook,
-          id = id1
+          id = id1,
+          minPrice = 200L,
+          maxPrice = 600L
         )
       )
 

@@ -33,7 +33,7 @@ class BookDao @Inject() (clock: Clock) {
 
     def createSelectBooksByGenreStatement(genreId: GenreId): fragment.Fragment =
       fr"""SELECT b.bookId, b.title, b.summary, b.isbn,
-           g.genreName, b.updatedAt, b.id
+           g.genreName, b.minPrice,b.maxPrice, b.updatedAt, b.id
          FROM bookworm.book b
          JOIN bookworm.genre g ON g.genreId = b.genreId
          WHERE b.genreId = ${genreId.id} AND b.deleted = false
@@ -61,12 +61,15 @@ class BookDao @Inject() (clock: Clock) {
       case Unavailable => true
     }
     for {
-      _ <- sql"""INSERT INTO BOOKWORM.BOOK(bookId,title,summary,isbn,genreId,deleted,createdAt,updatedAt)
+      _ <- sql"""INSERT INTO BOOKWORM.BOOK(bookId,title,summary,isbn,genreId,minPrice,maxPrice,deleted,createdAt,updatedAt)
          VALUES (
          ${book.bookId.id},
          ${book.bookDetails.title.value},
          ${book.bookDetails.summary.value},
-         ${book.bookDetails.isbn.value},${book.bookDetails.genre.id},
+         ${book.bookDetails.isbn.value},
+         ${book.bookDetails.genre.id},
+         ${book.bookDetails.minPrice.value},
+         ${book.bookDetails.maxPrice.value},
          $deleted,
          $currentTimestamp,
          $currentTimestamp
@@ -78,7 +81,7 @@ class BookDao @Inject() (clock: Clock) {
 
   def getOptionalBookById(bookId: BookId): doobie.ConnectionIO[Option[BookQueryModel]] =
     fr"""SELECT b.bookId, b.title, b.summary, b.isbn,
-           g.genreName, b.updatedAt, b.id
+           g.genreName, b.minPrice,b.maxPrice, b.updatedAt, b.id
          FROM bookworm.book b
          JOIN bookworm.genre g ON g.genreId = b.genreId
          WHERE b.bookId = ${bookId.id} AND b.deleted = false

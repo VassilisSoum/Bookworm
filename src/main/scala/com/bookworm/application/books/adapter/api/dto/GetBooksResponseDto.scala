@@ -7,7 +7,7 @@ case class GetBooksResponseDto(books: List[BookResponseDto], nextPage: Option[St
 
 object GetBooksResponseDto {
 
-  implicit val getBooksResponseDtoFormat = new JsonFormat[GetBooksResponseDto] {
+  implicit val getBooksResponseDtoFormat: JsonFormat[GetBooksResponseDto] = new JsonFormat[GetBooksResponseDto] {
 
     override def write(getBooksResponseDto: GetBooksResponseDto): JValue =
       Extraction.decompose(getBooksResponseDto)

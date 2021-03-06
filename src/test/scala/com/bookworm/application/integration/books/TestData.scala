@@ -2,6 +2,7 @@ package com.bookworm.application.integration.books
 
 import cats.free.Free
 import com.bookworm.application.IntegrationTestModule
+import com.bookworm.application.books.domain.model.BookStatus.{Available, Unavailable}
 import com.bookworm.application.books.domain.model._
 import doobie.ConnectionIO
 import doobie.free.connection
@@ -22,13 +23,28 @@ trait TestData extends IntegrationTestModule {
   val testBookSummary: BookSummary = BookSummary.create("TestBookSummary").toOption.get
   val testBookIsbn: BookIsbn = BookIsbn.create("9781234567897").toOption.get
   val testAuthorId: AuthorId = AuthorId(UUID.randomUUID())
+  val testBookMinPrice: BookPrice = BookPrice.create(1000L).toOption.get
+  val testBookMaxPrice: BookPrice = BookPrice.create(5000L).toOption.get
   val testGenre: Genre = Genre(testGenreId, GenreName.create(testGenreName).toOption.get)
+
+  val testBookDetails: BookDetails = BookDetails
+    .create(
+      testBookTitle,
+      testBookSummary,
+      testBookIsbn,
+      testGenreId,
+      List(testAuthorId),
+      testBookMinPrice,
+      testBookMaxPrice
+    )
+    .toOption
+    .get
 
   val testBook: Book =
     Book(
-      testBookId,
-      BookDetails(testBookTitle, testBookSummary, testBookIsbn, testGenreId, List(testAuthorId)),
-      BookStatus.Available
+      bookId = testBookId,
+      bookDetails = testBookDetails,
+      bookStatus = BookStatus.Available
     )
   val testAuthorFirstName: AuthorFirstName = AuthorFirstName.create("TestAuthorFirstName").toOption.get
   val testAuthorLastName: AuthorLastName = AuthorLastName.create("TestAuthorLastName").toOption.get
@@ -67,13 +83,20 @@ trait TestData extends IntegrationTestModule {
 
   def insertIntoBook(book: Book): ConnectionIO[Long] = {
     val now: Timestamp = Timestamp.valueOf(LocalDateTime.now(fakeClock))
-    sql"""insert into bookworm.book(bookId,title,summary,isbn,genreId,createdAt,updatedAt)
+    val deleted = book.bookStatus match {
+      case Available   => false
+      case Unavailable => true
+    }
+    sql"""insert into bookworm.book(bookId,title,summary,isbn,genreId,deleted,minPrice,maxPrice,createdAt,updatedAt)
          values (
           ${book.bookId.id},
           ${book.bookDetails.title.value},
           ${book.bookDetails.summary.value},
           ${book.bookDetails.isbn.value},
           ${book.bookDetails.genre.id},
+          $deleted,
+          ${book.bookDetails.minPrice.value},
+          ${book.bookDetails.maxPrice.value},
           $now,
           $now
          )""".update.withUniqueGeneratedKeys("id")
