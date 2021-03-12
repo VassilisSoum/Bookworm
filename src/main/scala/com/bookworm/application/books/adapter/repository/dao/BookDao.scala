@@ -87,14 +87,11 @@ class BookDao @Inject() (clock: Clock) {
          WHERE b.bookId = ${bookId.id} AND b.deleted = false
         """.query[BookQueryModel].option
 
-  def softDelete(bookId: BookId): doobie.ConnectionIO[BookStatus] = {
+  def softDelete(bookId: BookId): doobie.ConnectionIO[Unit] = {
     val currentTimestamp = Timestamp.valueOf(LocalDateTime.now(clock))
     fr"""update bookworm.book set deleted = true, updatedAt = $currentTimestamp 
-        WHERE bookId = ${bookId.id} AND deleted = false""".update.run
-      .map { rowsAffected =>
-        if (rowsAffected == 0) BookStatus.Available
-        else BookStatus.Unavailable
-      }
+        WHERE bookId = ${bookId.id}""".update.run
+      .map(_ => ())
   }
 
   def updateBook(book: Book): doobie.ConnectionIO[Unit] = {

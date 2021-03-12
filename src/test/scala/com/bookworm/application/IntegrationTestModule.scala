@@ -1,16 +1,17 @@
 package com.bookworm.application
 
 import cats.effect.{Blocker, ContextShift, IO}
+import cats.{Monad, MonadError}
 import com.bookworm.application.books.adapter.api.BookRestApi
 import com.bookworm.application.books.adapter.repository.BookRepositoryModule
 import com.bookworm.application.books.adapter.repository.dao.BookDao
-import com.bookworm.application.books.adapter.service.BookService
+import com.bookworm.application.books.adapter.service.BookApplicationService
 import com.bookworm.application.books.domain.port.inbound.{AddBookUseCase, GetBooksByGenreUseCase, RemoveBookUseCase, UpdateBookUseCase}
 import com.bookworm.application.integration.FakeClock
 import com.dimafeng.testcontainers.{Container, DockerComposeContainer, ExposedService, ForAllTestContainer}
 import com.google.inject._
-import doobie.ExecutionContexts
 import doobie.util.transactor.Transactor
+import doobie.{ConnectionIO, ExecutionContexts}
 import net.codingwell.scalaguice.ScalaModule
 import org.flywaydb.core.Flyway
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpec}
@@ -49,12 +50,15 @@ abstract class IntegrationTestModule
     new AbstractModule with ScalaModule {
 
       override def configure(): Unit = {
-        //bind(new TypeLiteral[Sync[IO]] {}).toInstance(implicitly[Sync[IO]])
+        bind(new TypeLiteral[Monad[ConnectionIO]] {}).toInstance(implicitly[Monad[ConnectionIO]])
+        bind(new TypeLiteral[MonadError[ConnectionIO, Throwable]] {})
+          .toInstance(implicitly[MonadError[ConnectionIO, Throwable]])
         bind(classOf[BookDao]).in(Scopes.SINGLETON)
-        bind(new TypeLiteral[GetBooksByGenreUseCase[IO]] {}).to(classOf[BookService]).in(Scopes.SINGLETON)
-        bind(new TypeLiteral[AddBookUseCase[IO]] {}).to(classOf[BookService]).in(Scopes.SINGLETON)
-        bind(new TypeLiteral[RemoveBookUseCase[IO]] {}).to(classOf[BookService]).in(Scopes.SINGLETON)
-        bind(new TypeLiteral[UpdateBookUseCase[IO]] {}).to(classOf[BookService]).in(Scopes.SINGLETON)
+        bind(classOf[BookApplicationService]).in(Scopes.SINGLETON)
+        bind(new TypeLiteral[GetBooksByGenreUseCase[ConnectionIO]] {}).in(Scopes.SINGLETON)
+        bind(new TypeLiteral[AddBookUseCase[ConnectionIO]] {}).in(Scopes.SINGLETON)
+        bind(new TypeLiteral[RemoveBookUseCase[ConnectionIO]] {}).in(Scopes.SINGLETON)
+        bind(new TypeLiteral[UpdateBookUseCase[ConnectionIO]] {}).in(Scopes.SINGLETON)
         bind(new TypeLiteral[Transactor[IO]] {}).toInstance(synchronousTransactor)
         bind(new TypeLiteral[BookRestApi] {}).in(Scopes.SINGLETON)
         bind(classOf[java.time.Clock]).toInstance(fakeClock)

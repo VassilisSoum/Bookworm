@@ -21,11 +21,11 @@ class BookRepositoryImplTest extends TestData {
 
       runInTransaction(insertIntoGenre(testGenre) *> insertIntoAuthor(testAuthor))
 
-      bookRepository.add(testBook).unsafeRunSync().toOption.get mustBe testBook
+      runInTransaction(bookRepository.add(testBook)) mustBe testBook
     }
 
     "Retrieve previous added book" in {
-      val addedBook: BookQueryModel = bookRepository.getById(testBookId).unsafeRunSync().toOption.get
+      val addedBook: BookQueryModel = runInTransaction(bookRepository.getById(testBookId)).get
       addedBook.bookId mustBe testBookId.id
       addedBook.genre mustBe testGenreName
       addedBook.id must be > 0L
@@ -34,13 +34,6 @@ class BookRepositoryImplTest extends TestData {
       addedBook.title mustBe testBookTitle.value
       addedBook.updatedAt mustBe LocalDateTime.ofInstant(fakeClock.current, fakeClock.zoneId)
       addedBook.minPrice mustBe testBookMinPrice.value
-    }
-
-    "Return BookDoesNotExist when retrieving a book that does not exist" in {
-      val expectedError = DomainBusinessError.BookDoesNotExist
-      val actualError = bookRepository.getById(BookId(UUID.randomUUID())).unsafeRunSync().left.toOption.get
-
-      actualError mustBe expectedError
     }
 
     "Update the title of an existing book" in {
@@ -60,10 +53,9 @@ class BookRepositoryImplTest extends TestData {
           .get
       )
       val response =
-        bookRepository.update(expectedBook).unsafeRunSync()
+        runInTransaction(bookRepository.update(expectedBook))
 
-      response.isRight mustBe true
-      response.toOption.get mustBe expectedBook
+      response mustBe expectedBook
     }
 
     "Update the summary of an existing book" in {
@@ -83,10 +75,9 @@ class BookRepositoryImplTest extends TestData {
           .get
       )
       val response =
-        bookRepository.update(expectedBook).unsafeRunSync()
+        runInTransaction(bookRepository.update(expectedBook))
 
-      response.isRight mustBe true
-      response.toOption.get mustBe expectedBook
+      response mustBe expectedBook
     }
 
     "Update the isbn of an existing book" in {
@@ -106,10 +97,9 @@ class BookRepositoryImplTest extends TestData {
           .get
       )
       val response =
-        bookRepository.update(expectedBook).unsafeRunSync()
+        runInTransaction(bookRepository.update(expectedBook))
 
-      response.isRight mustBe true
-      response.toOption.get mustBe expectedBook
+      response mustBe expectedBook
     }
 
     "Update the genre id of an existing book" in {
@@ -130,10 +120,9 @@ class BookRepositoryImplTest extends TestData {
           .get
       )
 
-      val response = bookRepository.update(expectedBook).unsafeRunSync()
+      val response = runInTransaction(bookRepository.update(expectedBook))
 
-      response.isRight mustBe true
-      response.toOption.get mustBe expectedBook
+      response mustBe expectedBook
     }
 
     "Update the authors of an existing book" in {
@@ -154,10 +143,9 @@ class BookRepositoryImplTest extends TestData {
           .get
       )
 
-      val response = bookRepository.update(expectedBook).unsafeRunSync()
+      val response = runInTransaction(bookRepository.update(expectedBook))
 
-      response.isRight mustBe true
-      response.toOption.get mustBe expectedBook
+      response mustBe expectedBook
     }
 
     "Update the minPrice of an existing book" in {
@@ -177,10 +165,9 @@ class BookRepositoryImplTest extends TestData {
           .get
       )
 
-      val response = bookRepository.update(expectedBook).unsafeRunSync()
+      val response = runInTransaction(bookRepository.update(expectedBook))
 
-      response.isRight mustBe true
-      response.toOption.get mustBe expectedBook
+      response mustBe expectedBook
     }
 
     "Update the maxPrice of an existing book" in {
@@ -200,40 +187,13 @@ class BookRepositoryImplTest extends TestData {
           .get
       )
 
-      val response = bookRepository.update(expectedBook).unsafeRunSync()
+      val response = runInTransaction(bookRepository.update(expectedBook))
 
-      response.isRight mustBe true
-      response.toOption.get mustBe expectedBook
-    }
-
-    "Return OneOrMoreAuthorsDoNotExist when updating an existing book with at least one author that does not exist" in {
-      val newAuthorId = AuthorId(UUID.randomUUID())
-      val expectedBook =
-        testBook.copy(bookDetails =
-          BookDetails
-            .create(
-              testBookTitle,
-              testBookSummary,
-              testBookIsbn,
-              testGenreId,
-              List(newAuthorId, testAuthorId),
-              testBookMinPrice,
-              testBookMaxPrice
-            )
-            .toOption
-            .get
-        )
-
-      val response = bookRepository.update(expectedBook).unsafeRunSync()
-
-      response.isLeft mustBe true
-      response.left.toOption.get mustBe DomainBusinessError.OneOrMoreAuthorsDoNotExist
+      response mustBe expectedBook
     }
 
     "Remove an existing book" in {
-      bookRepository.remove(testBookId).unsafeRunSync().isRight mustBe true
-
-      bookRepository.remove(testBookId).unsafeRunSync().isLeft mustBe true
+      runInTransaction(bookRepository.remove(testBookId)) mustBe ()
     }
   }
 }

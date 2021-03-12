@@ -5,8 +5,8 @@ import com.bookworm.application.books.adapter.api.BookRestApi.createPaginationIn
 import com.bookworm.application.books.adapter.api.dto.AddBookRequestDto._
 import com.bookworm.application.books.adapter.api.dto.BookResponseDto.BookResponseDtoOps
 import com.bookworm.application.books.adapter.api.dto._
+import com.bookworm.application.books.adapter.service.BookApplicationService
 import com.bookworm.application.books.domain.model._
-import com.bookworm.application.books.domain.port.inbound.{AddBookUseCase, GetBooksByGenreUseCase, RemoveBookUseCase, UpdateBookUseCase}
 import org.http4s.dsl.Http4sDsl
 import org.http4s.json4s.jackson.{jsonEncoderOf, jsonOf}
 import org.http4s.{EntityDecoder, EntityEncoder, HttpRoutes}
@@ -14,10 +14,7 @@ import org.http4s.{EntityDecoder, EntityEncoder, HttpRoutes}
 import javax.inject.Inject
 
 class BookRestApi @Inject() (
-    getBooksByGenreUseCase: GetBooksByGenreUseCase[IO],
-    addBookUseCase: AddBookUseCase[IO],
-    removeBookUseCase: RemoveBookUseCase[IO],
-    updateBookUseCase: UpdateBookUseCase[IO]
+    bookApplicationService: BookApplicationService
 ) extends Http4sDsl[IO] {
 
   object OptionalLimitQueryParamMatcher extends OptionalQueryParamDecoderMatcher[Int]("limit")
@@ -45,7 +42,7 @@ class BookRestApi @Inject() (
         }).fold(
           validationError => BadRequest(ValidationErrorDto.fromDomain(validationError)),
           paginationInfo =>
-            getBooksByGenreUseCase.retrieveBooksByGenre(GenreId(genreId), paginationInfo).flatMap { booksByGenreQuery =>
+            bookApplicationService.retrieveBooksByGenre(GenreId(genreId), paginationInfo).flatMap { booksByGenreQuery =>
               Ok(
                 GetBooksResponseDto(
                   booksByGenreQuery.books.map(_.fromDomainQueryModel),
@@ -59,14 +56,14 @@ class BookRestApi @Inject() (
           addBookRequestDto.toDomainModel.fold(
             validationError => BadRequest(ValidationErrorDto.fromDomain(validationError)),
             book =>
-              addBookUseCase.addBook(book).flatMap {
+              bookApplicationService.addBook(book).flatMap {
                 case Left(businessError) => Conflict(BusinessErrorDto.fromDomain(businessError))
                 case Right(_)            => NoContent()
               }
           )
         }
       case DELETE -> Root / "books" / UUIDVar(bookId) =>
-        removeBookUseCase.removeBook(BookId(bookId)).flatMap {
+        bookApplicationService.removeBook(BookId(bookId)).flatMap {
           case Left(businessError) => Conflict(BusinessErrorDto.fromDomain(businessError))
           case Right(_)            => NoContent()
         }
@@ -77,7 +74,7 @@ class BookRestApi @Inject() (
             .fold(
               validationError => BadRequest(ValidationErrorDto.fromDomain(validationError)),
               book =>
-                updateBookUseCase.updateBook(book).flatMap {
+                bookApplicationService.updateBook(book).flatMap {
                   case Left(businessError) => Conflict(BusinessErrorDto.fromDomain(businessError))
                   case Right(_)            => NoContent()
                 }
