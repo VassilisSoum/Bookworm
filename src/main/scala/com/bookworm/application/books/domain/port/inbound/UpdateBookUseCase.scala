@@ -15,7 +15,10 @@ class UpdateBookUseCase[F[_]: Monad] @Inject() (
   def updateBook(book: Book): F[Either[DomainBusinessError, Book]] =
     authorRepository.exist(book.bookDetails.authors).flatMap { allAuthorsExist =>
       if (allAuthorsExist) {
-        bookRepository.update(book).map(_ => Right(book))
+        bookRepository.getById(book.bookId).flatMap {
+          case Some(_) => bookRepository.update(book).map(_ => Right(book))
+          case None    => Monad[F].pure(Left(DomainBusinessError.BookDoesNotExist))
+        }
       } else {
         Monad[F].pure(Left(DomainBusinessError.OneOrMoreAuthorsDoNotExist))
       }
