@@ -136,13 +136,13 @@ class UpdateBookIntegrationTest extends TestData with BookEndpoints with EntityE
       response.as[BusinessErrorDto].unsafeRunSync().errorType mustBe DomainBusinessError.OneOrMoreAuthorsDoNotExist
     }
 
-    "return 409 CONFLICT with error type BookDoesNotExist when the book to update does not exist" in {
+    "return 404 NOT_FOUND with error type BookDoesNotExist when the book to update does not exist" in {
       val request =
         Request[IO](Method.PUT, Uri.unsafeFromString(s"/books/${UUID.randomUUID()}"))
           .withEntity(updateBookRequestDto)
       val response = endpoint(request)
         .unsafeRunSync()
-      response.status mustBe Status.Conflict
+      response.status mustBe Status.NotFound
       response.as[BusinessErrorDto].unsafeRunSync().errorType mustBe DomainBusinessError.BookDoesNotExist
     }
   }

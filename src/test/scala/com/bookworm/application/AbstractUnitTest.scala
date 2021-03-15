@@ -1,7 +1,7 @@
 package com.bookworm.application
 
 import com.bookworm.application.books.domain.model._
-import com.bookworm.application.books.domain.port.inbound.query.BookQueryModel
+import com.bookworm.application.books.domain.port.inbound.query.{AuthorQueryModel, BookQueryModel}
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, WordSpec}
 
@@ -48,4 +48,15 @@ abstract class AbstractUnitTest extends WordSpec with Matchers with MockFactory 
     updatedAt = LocalDateTime.now(),
     id = 1L
   )
+
+  val testAuthorId = AuthorId(UUID.randomUUID())
+  val testAuthorFirstName = AuthorFirstName.create("Bill").toOption.get
+  val testAuthorLastName = AuthorLastName.create("Soumakis").toOption.get
+
+  val testAuthorQueryModel =
+    AuthorQueryModel(
+      authorId = testAuthorId.id,
+      firstName = testAuthorFirstName.firstName,
+      lastName = testAuthorLastName.lastName
+    )
 }

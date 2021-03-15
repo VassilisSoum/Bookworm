@@ -18,12 +18,12 @@ class RemoveBookIntegrationTest extends TestData with BookEndpoints with EntityD
       removeBookResponse.status mustBe Status.NoContent
     }
 
-    "return 409 CONFLICT with errorType BookDoesNotExist when trying to remove a book that does not exist" in {
+    "return 404 NotFound with errorType BookDoesNotExist when trying to remove a book that does not exist" in {
       val removeBookRequest = Request[IO](Method.DELETE, Uri.unsafeFromString(s"/books/${testBookId.id}"))
 
       val removeBookResponse = endpoint(removeBookRequest).unsafeRunSync()
 
-      removeBookResponse.status mustBe Status.Conflict
+      removeBookResponse.status mustBe Status.NotFound
       removeBookResponse.as[BusinessErrorDto].unsafeRunSync().errorType mustBe DomainBusinessError.BookDoesNotExist
     }
   }

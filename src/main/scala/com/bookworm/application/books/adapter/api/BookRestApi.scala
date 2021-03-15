@@ -6,6 +6,7 @@ import com.bookworm.application.books.adapter.api.dto.AddBookRequestDto._
 import com.bookworm.application.books.adapter.api.dto.BookResponseDto.BookResponseDtoOps
 import com.bookworm.application.books.adapter.api.dto._
 import com.bookworm.application.books.adapter.service.BookApplicationService
+import com.bookworm.application.books.domain.model.DomainBusinessError.{BookDoesNotExist, OneOrMoreAuthorsDoNotExist}
 import com.bookworm.application.books.domain.model._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.json4s.jackson.{jsonEncoderOf, jsonOf}
@@ -17,19 +18,18 @@ class BookRestApi @Inject() (
     bookApplicationService: BookApplicationService
 ) extends Http4sDsl[IO] {
 
-  object OptionalLimitQueryParamMatcher extends OptionalQueryParamDecoderMatcher[Int]("limit")
-  object OptionalContinuationTokenParamMatcher extends OptionalQueryParamDecoderMatcher[String]("continuationToken")
+  private object OptionalLimitQueryParamMatcher extends OptionalQueryParamDecoderMatcher[Int]("limit")
 
-  implicit val validationErrorDtoEncoder: EntityEncoder[IO, ValidationErrorDto] = jsonEncoderOf[IO, ValidationErrorDto]
+  private object OptionalContinuationTokenParamMatcher
+    extends OptionalQueryParamDecoderMatcher[String]("continuationToken")
 
-  implicit val businessErrorDtoEncoder: EntityEncoder[IO, BusinessErrorDto] = jsonEncoderOf[IO, BusinessErrorDto]
-
-  implicit val getBooksResponseDtoEntityEncoder: EntityEncoder[IO, GetBooksResponseDto] =
+  implicit private val getBooksResponseDtoEntityEncoder: EntityEncoder[IO, GetBooksResponseDto] =
     jsonEncoderOf[IO, GetBooksResponseDto]
 
-  implicit val createBookRequestDtoDecoder: EntityDecoder[IO, AddBookRequestDto] = jsonOf[IO, AddBookRequestDto]
+  implicit private val createBookRequestDtoDecoder: EntityDecoder[IO, AddBookRequestDto] = jsonOf[IO, AddBookRequestDto]
 
-  implicit val updateBookRequestDtoDecoder: EntityDecoder[IO, UpdateBookRequestDto] = jsonOf[IO, UpdateBookRequestDto]
+  implicit private val updateBookRequestDtoDecoder: EntityDecoder[IO, UpdateBookRequestDto] =
+    jsonOf[IO, UpdateBookRequestDto]
 
   def routes: HttpRoutes[IO] =
     HttpRoutes.of[IO] {
@@ -64,8 +64,12 @@ class BookRestApi @Inject() (
         }
       case DELETE -> Root / "books" / UUIDVar(bookId) =>
         bookApplicationService.removeBook(BookId(bookId)).flatMap {
-          case Left(businessError) => Conflict(BusinessErrorDto.fromDomain(businessError))
-          case Right(_)            => NoContent()
+          case Left(businessError) =>
+            BusinessErrorDto.fromDomain(businessError) match {
+              case businessErrorDto @ BusinessErrorDto(BookDoesNotExist, _) => NotFound(businessErrorDto)
+              case businessErrorDto @ BusinessErrorDto(_, _)                => InternalServerError(businessErrorDto)
+            }
+          case Right(_) => NoContent()
         }
       case req @ PUT -> Root / "books" / UUIDVar(bookId) =>
         req.as[UpdateBookRequestDto].flatMap { updateBookRequestDto =>
@@ -75,8 +79,13 @@ class BookRestApi @Inject() (
               validationError => BadRequest(ValidationErrorDto.fromDomain(validationError)),
               book =>
                 bookApplicationService.updateBook(book).flatMap {
-                  case Left(businessError) => Conflict(BusinessErrorDto.fromDomain(businessError))
-                  case Right(_)            => NoContent()
+                  case Left(businessError) =>
+                    BusinessErrorDto.fromDomain(businessError) match {
+                      case businessErrorDto @ BusinessErrorDto(OneOrMoreAuthorsDoNotExist, _) =>
+                        Conflict(businessErrorDto)
+                      case businessErrorDto @ BusinessErrorDto(BookDoesNotExist, _) => NotFound(businessErrorDto)
+                    }
+                  case Right(_) => NoContent()
                 }
             )
         }
