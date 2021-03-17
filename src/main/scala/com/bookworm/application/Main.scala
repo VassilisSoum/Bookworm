@@ -1,8 +1,9 @@
 package com.bookworm.application
 
 import cats.effect.{ExitCode, IO, IOApp}
+import cats.syntax.semigroupk._
 import cats.{Monad, MonadError}
-import com.bookworm.application.books.adapter.api.BookRestApi
+import com.bookworm.application.books.adapter.api.{AuthorRestApi, BookRestApi}
 import com.bookworm.application.books.adapter.repository.BookRepositoryModule
 import com.bookworm.application.books.adapter.repository.dao.BookDao
 import com.bookworm.application.books.adapter.service.BookApplicationService
@@ -29,7 +30,7 @@ object Main extends IOApp {
           new BookRepositoryModule
         )
         val httpApp = Logger.httpApp(logHeaders = true, logBody = true)(
-          Router("/" -> injector.getInstance(classOf[BookRestApi]).routes).orNotFound
+          Router("/" -> injector.getInstance(classOf[BookRestApi]).routes.<+>(injector.getInstance(classOf[AuthorRestApi]).routes)).orNotFound
         )
         for {
           _ <- BookwormServer.migrate(resources._1)
