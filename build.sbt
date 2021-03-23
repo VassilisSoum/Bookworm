@@ -9,6 +9,7 @@ val FlywayVersion = "7.3.2"
 val TestContainersVersion = "0.38.8"
 val ScalaGuiceVersion = "4.2.11"
 val Json4sVersion = "3.6.10"
+val CommonValidatorVersion = "1.7"
 
 lazy val root = (project in file("."))
   .settings(
@@ -43,6 +44,7 @@ lazy val root = (project in file("."))
       "com.github.pureconfig" %% "pureconfig-cats-effect" % PureConfigVersion,
       "net.codingwell" %% "scala-guice" % ScalaGuiceVersion,
       "org.flywaydb" % "flyway-core" % FlywayVersion,
+      "commons-validator" % "commons-validator" % CommonValidatorVersion,
       "com.dimafeng" %% "testcontainers-scala-scalatest" % TestContainersVersion % Test,
       "com.dimafeng" %% "testcontainers-scala-postgresql" % TestContainersVersion % Test,
       "org.scalatest" %% "scalatest" % "3.0.8" % Test
