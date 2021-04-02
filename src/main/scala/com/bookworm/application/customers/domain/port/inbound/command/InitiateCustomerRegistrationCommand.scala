@@ -7,9 +7,15 @@ case class InitiateCustomerRegistrationCommand(
     firstName: CustomerFirstName,
     lastName: CustomerLastName,
     email: CustomerEmail,
-    age: CustomerAge
+    age: CustomerAge,
+    password: CustomerPassword
 ) {
 
   def toDomainObject: Customer =
-    Customer(id, CustomerDetails(firstName, lastName, email, age), CustomerRegistrationStatus.Pending)
+    Customer(
+      customerId = id,
+      customerDetails = CustomerDetails(firstName, lastName, email, age),
+      customerPassword = password,
+      customerRegistrationStatus = CustomerRegistrationStatus.Pending
+    )
 }

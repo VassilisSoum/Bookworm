@@ -1,9 +1,10 @@
 package com.bookworm.application.customers.domain.port.inbound
 
-import cats.Monad
 import cats.implicits._
-import com.bookworm.application.customers.domain.model.{CustomerRegistrationStatus, DomainBusinessError}
+import cats.{Monad, MonadError}
+import com.bookworm.application.customers.domain.model.{CustomerId, CustomerRegistrationStatus, DomainBusinessError}
 import com.bookworm.application.customers.domain.port.inbound.command.{CompleteCustomerRegistrationCommand, InitiateCustomerRegistrationCommand}
+import com.bookworm.application.customers.domain.port.inbound.query.CustomerQueryModel
 import com.bookworm.application.customers.domain.port.outbound.{CustomerRepository, VerificationTokenRepository}
 
 import java.time.{Clock, LocalDateTime}
@@ -13,7 +14,7 @@ class RegisterCustomerUseCase[F[_]: Monad] @Inject() (
     customerRepository: CustomerRepository[F],
     verificationTokenRepository: VerificationTokenRepository[F],
     clock: Clock
-) {
+)(implicit M: MonadError[F, Throwable]) {
 
   def initiateRegistration(
     initiateCustomerRegistrationCommand: InitiateCustomerRegistrationCommand
@@ -27,17 +28,23 @@ class RegisterCustomerUseCase[F[_]: Monad] @Inject() (
 
   def completeCustomerRegistration(
     completeCustomerRegistrationCommand: CompleteCustomerRegistrationCommand
-  ): F[Either[DomainBusinessError, Unit]] =
+  ): F[Either[DomainBusinessError, CustomerQueryModel]] =
     verificationTokenRepository.findBy(completeCustomerRegistrationCommand.verificationToken).flatMap {
       case Some(customerVerificationToken) =>
         if (LocalDateTime.now(clock).isAfter(customerVerificationToken.expirationDate)) {
           Monad[F].pure(Left(DomainBusinessError.VerificationTokenExpired))
         } else {
           customerRepository.findBy(customerVerificationToken.customerId).flatMap {
-            case Some(customer) if customer.customerRegistrationStatus == CustomerRegistrationStatus.Pending =>
+            case Some(customerQueryModel)
+                if customerQueryModel.customerRegistrationStatus == CustomerRegistrationStatus.Pending =>
               customerRepository
-                .update(customer.copy(customerRegistrationStatus = CustomerRegistrationStatus.Completed))
-                .map(Right(_))
+                .updateRegistrationStatus(
+                  CustomerId(customerQueryModel.customerId),
+                  CustomerRegistrationStatus.Completed
+                )
+                .map(_ =>
+                  Right(customerQueryModel.copy(customerRegistrationStatus = CustomerRegistrationStatus.Completed))
+                )
             case _ =>
               Monad[F].pure(Left(DomainBusinessError.CustomerDoesNotExists))
           }

@@ -7,4 +7,5 @@ object DomainValidationError {
   final case object InvalidCustomerLastName extends DomainValidationError
   final case object InvalidCustomerEmail extends DomainValidationError
   final case object InvalidCustomerAge extends DomainValidationError
+  final case object InvalidCustomerPassword extends DomainValidationError
 }

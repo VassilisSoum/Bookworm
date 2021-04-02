@@ -1,0 +1,9 @@
+CREATE TABLE IF NOT EXISTS BOOKWORM.CUSTOMER_VERIFICATION_TOKEN
+(
+    token          UUID      NOT NULL PRIMARY KEY,
+    customerId     UUID      NOT NULL,
+    expirationDate TIMESTAMP NOT NULL,
+    createdAt      TIMESTAMP NOT NULL,
+
+    CONSTRAINT fk_customer_verification_token FOREIGN KEY (customerId) REFERENCES BOOKWORM.CUSTOMER (id) ON DELETE CASCADE
+);

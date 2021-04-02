@@ -10,6 +10,7 @@ val TestContainersVersion = "0.38.8"
 val ScalaGuiceVersion = "4.2.11"
 val Json4sVersion = "3.6.10"
 val CommonValidatorVersion = "1.7"
+val AwsJavaSDK = "1.11.986"
 
 lazy val root = (project in file("."))
   .settings(
@@ -45,6 +46,8 @@ lazy val root = (project in file("."))
       "net.codingwell" %% "scala-guice" % ScalaGuiceVersion,
       "org.flywaydb" % "flyway-core" % FlywayVersion,
       "commons-validator" % "commons-validator" % CommonValidatorVersion,
+      "com.amazonaws" % "aws-java-sdk-sqs" % AwsJavaSDK,
+      "com.amazonaws" % "aws-java-sdk-sns" % AwsJavaSDK,
       "com.dimafeng" %% "testcontainers-scala-scalatest" % TestContainersVersion % Test,
       "com.dimafeng" %% "testcontainers-scala-postgresql" % TestContainersVersion % Test,
       "org.scalatest" %% "scalatest" % "3.0.8" % Test

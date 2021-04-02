@@ -2,11 +2,16 @@ package com.bookworm.application
 
 import cats.effect.{Blocker, ContextShift, IO}
 import cats.{Monad, MonadError}
-import com.bookworm.application.books.adapter.api.BookRestApi
+import com.bookworm.application.books.adapter.api.{AuthorRestApi, BookRestApi}
 import com.bookworm.application.books.adapter.repository.BookRepositoryModule
-import com.bookworm.application.books.adapter.repository.dao.BookDao
-import com.bookworm.application.books.adapter.service.BookApplicationService
+import com.bookworm.application.books.adapter.repository.dao.{AuthorDao, BookDao}
+import com.bookworm.application.books.adapter.service.{AuthorApplicationService, BookApplicationService}
 import com.bookworm.application.books.domain.port.inbound.{AddBookUseCase, GetBooksByGenreUseCase, RemoveBookUseCase, UpdateBookUseCase}
+import com.bookworm.application.customers.adapter.api.CustomerRegistrationRestApi
+import com.bookworm.application.customers.adapter.repository.CustomerRepositoryModule
+import com.bookworm.application.customers.adapter.repository.dao.{CustomerDao, CustomerVerificationTokenDao}
+import com.bookworm.application.customers.adapter.service.{CustomerApplicationService, VerificationTokenApplicationService}
+import com.bookworm.application.customers.domain.port.inbound.{RegisterCustomerUseCase, VerificationTokenUseCase}
 import com.bookworm.application.integration.FakeClock
 import com.dimafeng.testcontainers.{Container, DockerComposeContainer, ExposedService, ForAllTestContainer}
 import com.google.inject._
@@ -54,17 +59,28 @@ abstract class IntegrationTestModule
         bind(new TypeLiteral[MonadError[ConnectionIO, Throwable]] {})
           .toInstance(implicitly[MonadError[ConnectionIO, Throwable]])
         bind(classOf[BookDao]).in(Scopes.SINGLETON)
+        bind(classOf[AuthorDao]).in(Scopes.SINGLETON)
         bind(classOf[BookApplicationService]).in(Scopes.SINGLETON)
+        bind(classOf[AuthorApplicationService]).in(Scopes.SINGLETON)
         bind(new TypeLiteral[GetBooksByGenreUseCase[ConnectionIO]] {}).in(Scopes.SINGLETON)
         bind(new TypeLiteral[AddBookUseCase[ConnectionIO]] {}).in(Scopes.SINGLETON)
         bind(new TypeLiteral[RemoveBookUseCase[ConnectionIO]] {}).in(Scopes.SINGLETON)
         bind(new TypeLiteral[UpdateBookUseCase[ConnectionIO]] {}).in(Scopes.SINGLETON)
+        bind(new TypeLiteral[RegisterCustomerUseCase[ConnectionIO]]{}).in(Scopes.SINGLETON)
+        bind(new TypeLiteral[VerificationTokenUseCase[ConnectionIO]]{}).in(Scopes.SINGLETON)
         bind(new TypeLiteral[Transactor[IO]] {}).toInstance(synchronousTransactor)
         bind(new TypeLiteral[BookRestApi] {}).in(Scopes.SINGLETON)
+        bind(new TypeLiteral[AuthorRestApi] {}).in(Scopes.SINGLETON)
+        bind(new TypeLiteral[CustomerRegistrationRestApi] {}).in(Scopes.SINGLETON)
+        bind(classOf[CustomerApplicationService]).in(Scopes.SINGLETON)
+        bind(classOf[VerificationTokenApplicationService]).in(Scopes.SINGLETON)
+        bind(classOf[CustomerDao]).in(Scopes.SINGLETON)
+        bind(classOf[CustomerVerificationTokenDao]).in(Scopes.SINGLETON)
         bind(classOf[java.time.Clock]).toInstance(fakeClock)
       }
     },
-    new BookRepositoryModule
+    new BookRepositoryModule,
+    new CustomerRepositoryModule
   )
 
   override def beforeAll(): Unit = {
