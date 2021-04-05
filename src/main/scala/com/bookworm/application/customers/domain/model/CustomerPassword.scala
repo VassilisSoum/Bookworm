@@ -15,7 +15,7 @@ object CustomerPassword {
 
   def create(password: String): Either[DomainValidationError, CustomerPassword] = {
     val matcher = pattern.matcher(password)
-    if (matcher.matches()) Left(DomainValidationError.InvalidCustomerPassword)
+    if (!matcher.matches()) Left(DomainValidationError.InvalidCustomerPassword)
     else
       Right(new CustomerPassword(password) {})
   }

@@ -11,7 +11,9 @@ object Configuration {
 
   case class DatabaseConfig(driver: String, url: String, user: String, password: String, threadPoolSize: Int)
 
-  case class Config(server: ServerConfig, database: DatabaseConfig)
+  case class CustomerConfig(verificationTokenExpirationInSeconds: Long)
+
+  case class Config(server: ServerConfig, database: DatabaseConfig, customer: CustomerConfig)
 
   def load(configFile: String = "application.conf")(implicit contextShift: ContextShift[IO]): Resource[IO, Config] =
     Blocker[IO].flatMap { blocker =>

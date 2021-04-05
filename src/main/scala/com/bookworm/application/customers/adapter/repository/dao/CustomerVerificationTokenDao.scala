@@ -15,7 +15,7 @@ class CustomerVerificationTokenDao @Inject() (clock: Clock) {
   def insert(customerVerificationToken: CustomerVerificationToken): doobie.ConnectionIO[Unit] = {
     val currentTimestamp = Timestamp.valueOf(LocalDateTime.now(clock))
 
-    fr"""
+    sql"""
         INSERT INTO BOOKWORM.CUSTOMER_VERIFICATION_TOKEN(token,customerId,expirationDate,createdAt) 
         VALUES(
         ${customerVerificationToken.token.value}, 

@@ -7,6 +7,7 @@ import com.bookworm.application.books.adapter.repository.BookRepositoryModule
 import com.bookworm.application.books.adapter.repository.dao.{AuthorDao, BookDao}
 import com.bookworm.application.books.adapter.service.{AuthorApplicationService, BookApplicationService}
 import com.bookworm.application.books.domain.port.inbound.{AddBookUseCase, GetBooksByGenreUseCase, RemoveBookUseCase, UpdateBookUseCase}
+import com.bookworm.application.config.Configuration.CustomerConfig
 import com.bookworm.application.customers.adapter.api.CustomerRegistrationRestApi
 import com.bookworm.application.customers.adapter.repository.CustomerRepositoryModule
 import com.bookworm.application.customers.adapter.repository.dao.{CustomerDao, CustomerVerificationTokenDao}
@@ -37,6 +38,7 @@ abstract class IntegrationTestModule
   private val jdbcUrl: String = s"jdbc:postgresql://localhost:5432/$databaseName"
   private val username: String = "Bookworm"
   private val password: String = "password"
+  private val customerConfig: CustomerConfig = CustomerConfig(86400)
 
   val fakeClock: FakeClock = new FakeClock
 
@@ -66,8 +68,8 @@ abstract class IntegrationTestModule
         bind(new TypeLiteral[AddBookUseCase[ConnectionIO]] {}).in(Scopes.SINGLETON)
         bind(new TypeLiteral[RemoveBookUseCase[ConnectionIO]] {}).in(Scopes.SINGLETON)
         bind(new TypeLiteral[UpdateBookUseCase[ConnectionIO]] {}).in(Scopes.SINGLETON)
-        bind(new TypeLiteral[RegisterCustomerUseCase[ConnectionIO]]{}).in(Scopes.SINGLETON)
-        bind(new TypeLiteral[VerificationTokenUseCase[ConnectionIO]]{}).in(Scopes.SINGLETON)
+        bind(new TypeLiteral[RegisterCustomerUseCase[ConnectionIO]] {}).in(Scopes.SINGLETON)
+        bind(new TypeLiteral[VerificationTokenUseCase[ConnectionIO]] {}).in(Scopes.SINGLETON)
         bind(new TypeLiteral[Transactor[IO]] {}).toInstance(synchronousTransactor)
         bind(new TypeLiteral[BookRestApi] {}).in(Scopes.SINGLETON)
         bind(new TypeLiteral[AuthorRestApi] {}).in(Scopes.SINGLETON)
@@ -77,6 +79,7 @@ abstract class IntegrationTestModule
         bind(classOf[CustomerDao]).in(Scopes.SINGLETON)
         bind(classOf[CustomerVerificationTokenDao]).in(Scopes.SINGLETON)
         bind(classOf[java.time.Clock]).toInstance(fakeClock)
+        bind(classOf[CustomerConfig]).toInstance(customerConfig)
       }
     },
     new BookRepositoryModule,

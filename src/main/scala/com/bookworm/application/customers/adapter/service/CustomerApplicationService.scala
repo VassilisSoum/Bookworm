@@ -4,14 +4,17 @@ import cats.effect.IO
 import cats.implicits._
 import com.bookworm.application.customers.adapter.logger
 import com.bookworm.application.customers.adapter.producer.DomainEventProducer
-import com.bookworm.application.customers.domain.model.DomainBusinessError
+import com.bookworm.application.customers.adapter.service.model.{CompleteCustomerRegistrationServiceModel, InitiateCustomerRegistrationServiceModel}
+import com.bookworm.application.customers.domain.model.{DomainBusinessError, VerificationToken}
 import com.bookworm.application.customers.domain.port.inbound.RegisterCustomerUseCase
 import com.bookworm.application.customers.domain.port.inbound.command.{CompleteCustomerRegistrationCommand, InitiateCustomerRegistrationCommand}
+import com.bookworm.application.customers.domain.port.inbound.query.CustomerQueryModel
 import com.bookworm.application.customers.domain.port.outbound.event.{CompleteCustomerRegistrationFinishedEvent, DomainEventPublicationStatus, InitialCustomerRegistrationPendingEvent}
 import doobie.implicits._
 import doobie.{ConnectionIO, Transactor}
 
 import java.time.{Clock, LocalDateTime}
+import java.util.UUID
 import javax.inject.Inject
 
 class CustomerApplicationService @Inject() (
@@ -22,8 +25,16 @@ class CustomerApplicationService @Inject() (
 ) {
 
   def initiateCustomerRegistration(
-    initiateCustomerRegistrationCommand: InitiateCustomerRegistrationCommand
-  ): IO[Either[DomainBusinessError, Unit]] =
+    initiateCustomerRegistrationServiceModel: InitiateCustomerRegistrationServiceModel
+  ): IO[Either[DomainBusinessError, Unit]] = {
+    val initiateCustomerRegistrationCommand = InitiateCustomerRegistrationCommand(
+      initiateCustomerRegistrationServiceModel.id,
+      initiateCustomerRegistrationServiceModel.firstName,
+      initiateCustomerRegistrationServiceModel.lastName,
+      initiateCustomerRegistrationServiceModel.email,
+      initiateCustomerRegistrationServiceModel.age,
+      initiateCustomerRegistrationServiceModel.password
+    )
     registerCustomerUseCase
       .initiateRegistration(initiateCustomerRegistrationCommand)
       .transact(transactor)
@@ -38,7 +49,12 @@ class CustomerApplicationService @Inject() (
         if (resultE.isRight) {
           domainEventProducer
             .produce(
-              InitialCustomerRegistrationPendingEvent(initiateCustomerRegistrationCommand.id, LocalDateTime.now(clock))
+              InitialCustomerRegistrationPendingEvent(
+                id = UUID.randomUUID(),
+                customerId = initiateCustomerRegistrationCommand.id.id,
+                creationDate = LocalDateTime.now(clock),
+                verificationToken = VerificationToken(UUID.randomUUID())
+              )
             )
             .flatTap {
               case DomainEventPublicationStatus.Published =>
@@ -49,10 +65,14 @@ class CustomerApplicationService @Inject() (
         }
         IO.pure(resultE)
       }
+  }
 
   def completeCustomerRegistration(
-    completeCustomerRegistrationCommand: CompleteCustomerRegistrationCommand
-  ): IO[Unit] =
+    completeCustomerRegistrationServiceModel: CompleteCustomerRegistrationServiceModel
+  ): IO[Either[DomainBusinessError, CustomerQueryModel]] = {
+    val completeCustomerRegistrationCommand = CompleteCustomerRegistrationCommand(
+      completeCustomerRegistrationServiceModel.verificationToken
+    )
     registerCustomerUseCase
       .completeCustomerRegistration(completeCustomerRegistrationCommand)
       .transact(transactor)
@@ -61,7 +81,7 @@ class CustomerApplicationService @Inject() (
           IO.pure(logger.error(s"Failed to complete customer registration with error $domainBusinessError"))
         case Right(customer) =>
           IO.pure(
-            logger.info(s"Successfully completed customer registration for customer id ${customer.customerId.id}")
+            logger.info(s"Successfully completed customer registration for customer id ${customer.customerId}")
           )
       }
       .flatMap { resultE =>
@@ -69,7 +89,11 @@ class CustomerApplicationService @Inject() (
           case Right(customer) =>
             domainEventProducer
               .produce(
-                CompleteCustomerRegistrationFinishedEvent(customer.customerId, LocalDateTime.now(clock))
+                CompleteCustomerRegistrationFinishedEvent(
+                  UUID.randomUUID(),
+                  customer.customerId,
+                  LocalDateTime.now(clock)
+                )
               )
               .flatTap {
                 case DomainEventPublicationStatus.Published =>
@@ -77,9 +101,10 @@ class CustomerApplicationService @Inject() (
                 case DomainEventPublicationStatus.NotPublished =>
                   IO.pure(logger.error("Could not publish initial customer registration event"))
               }
-              .map(_ => IO.pure(resultE))
+              .flatMap(_ => IO.pure(resultE))
           case Left(_) =>
             IO.pure(resultE)
         }
       }
+  }
 }

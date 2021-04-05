@@ -2,7 +2,8 @@ package com.bookworm.application
 
 import com.bookworm.application.books.domain.model._
 import com.bookworm.application.books.domain.port.inbound.query.{AuthorQueryModel, BookQueryModel}
-import com.bookworm.application.customers.domain.model.{Customer, CustomerAge, CustomerDetails, CustomerEmail, CustomerFirstName, CustomerId, CustomerLastName, CustomerRegistrationStatus, CustomerVerificationToken, VerificationToken}
+import com.bookworm.application.customers.domain.model._
+import com.bookworm.application.customers.domain.port.inbound.query.CustomerQueryModel
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{Matchers, WordSpec}
 
@@ -66,26 +67,57 @@ abstract class AbstractUnitTest extends WordSpec with Matchers with MockFactory 
   val customerLastName = CustomerLastName.create("Soumakis").toOption.get
   val customerEmail = CustomerEmail.create("someone@test.com").toOption.get
   val customerAge = CustomerAge.create(28).toOption.get
+  val customerPassword = CustomerPassword.create("Someone@123").toOption.get
 
   val pendingCustomer = Customer(
-    customerId,
-    CustomerDetails(customerFirstName, customerLastName, customerEmail, customerAge),
-    CustomerRegistrationStatus.Pending
+    customerId = customerId,
+    customerDetails = CustomerDetails(customerFirstName, customerLastName, customerEmail, customerAge),
+    customerPassword = customerPassword,
+    customerRegistrationStatus = CustomerRegistrationStatus.Pending
   )
 
   val registeredCustomer = Customer(
-    customerId,
-    CustomerDetails(customerFirstName, customerLastName, customerEmail, customerAge),
-    CustomerRegistrationStatus.Completed
+    customerId = customerId,
+    customerDetails = CustomerDetails(customerFirstName, customerLastName, customerEmail, customerAge),
+    customerPassword = customerPassword,
+    customerRegistrationStatus = CustomerRegistrationStatus.Completed
   )
 
   val expiredRegistrationCustomer = Customer(
-    customerId,
-    CustomerDetails(customerFirstName, customerLastName, customerEmail, customerAge),
-    CustomerRegistrationStatus.Expired
+    customerId = customerId,
+    customerDetails = CustomerDetails(customerFirstName, customerLastName, customerEmail, customerAge),
+    customerPassword = customerPassword,
+    customerRegistrationStatus = CustomerRegistrationStatus.Expired
   )
 
   val verificationToken = VerificationToken(UUID.randomUUID())
+
+  val pendingCustomerQueryModel = CustomerQueryModel(
+    customerId = pendingCustomer.customerId.id,
+    customerFirstName = pendingCustomer.customerDetails.customerFirstName.value,
+    customerLastName = pendingCustomer.customerDetails.customerLastName.value,
+    customerEmail = pendingCustomer.customerDetails.customerEmail.value,
+    customerAge = pendingCustomer.customerDetails.customerAge.value,
+    customerRegistrationStatus = CustomerRegistrationStatus.Pending
+  )
+
+  val expiredRegistrationCustomerQueryModel = CustomerQueryModel(
+    customerId = expiredRegistrationCustomer.customerId.id,
+    customerFirstName = expiredRegistrationCustomer.customerDetails.customerFirstName.value,
+    customerLastName = expiredRegistrationCustomer.customerDetails.customerLastName.value,
+    customerEmail = expiredRegistrationCustomer.customerDetails.customerEmail.value,
+    customerAge = expiredRegistrationCustomer.customerDetails.customerAge.value,
+    customerRegistrationStatus = CustomerRegistrationStatus.Expired
+  )
+
+  val registeredCustomerQueryModel = CustomerQueryModel(
+    customerId = registeredCustomer.customerId.id,
+    customerFirstName = registeredCustomer.customerDetails.customerFirstName.value,
+    customerLastName = registeredCustomer.customerDetails.customerLastName.value,
+    customerEmail = registeredCustomer.customerDetails.customerEmail.value,
+    customerAge = registeredCustomer.customerDetails.customerAge.value,
+    customerRegistrationStatus = CustomerRegistrationStatus.Completed
+  )
 
   val customerVerificationToken =
     CustomerVerificationToken(

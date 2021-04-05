@@ -23,7 +23,7 @@ class VerificationTokenUseCaseTest extends AbstractUnitTest {
     )
     "removes previous customer verification tokens and " +
     "save the verification token for an existing customer but not yet fully registered" in {
-      (customerRepository.findBy _).expects(customerId).returns(Some(pendingCustomer)).once()
+      (customerRepository.findBy _).expects(customerId).returns(Some(pendingCustomerQueryModel)).once()
       (verificationTokenRepository.removeAll _).expects(customerId).returns(()).once()
       (verificationTokenRepository.save _).expects(saveEmailVerificationTokenCommand.toDomainObject).returns(()).once()
 
@@ -43,8 +43,8 @@ class VerificationTokenUseCaseTest extends AbstractUnitTest {
     }
 
     "returns CustomerDoesNotExists when trying to save a verification token for a customer " +
-      "whom the registration status is expired" in {
-      (customerRepository.findBy _).expects(customerId).returns(Some(expiredRegistrationCustomer)).once()
+    "whom the registration status is expired" in {
+      (customerRepository.findBy _).expects(customerId).returns(Some(expiredRegistrationCustomerQueryModel)).once()
       (verificationTokenRepository.removeAll _).expects(*).never()
       (verificationTokenRepository.save _).expects(*).never()
 
@@ -56,7 +56,7 @@ class VerificationTokenUseCaseTest extends AbstractUnitTest {
     }
 
     "returns CustomerAlreadyRegistered when trying to save a verification token for a fully registered customer" in {
-      (customerRepository.findBy _).expects(customerId).returns(Some(registeredCustomer)).once()
+      (customerRepository.findBy _).expects(customerId).returns(Some(registeredCustomerQueryModel)).once()
       (verificationTokenRepository.removeAll _).expects(*).never()
       (verificationTokenRepository.save _).expects(*).never()
 

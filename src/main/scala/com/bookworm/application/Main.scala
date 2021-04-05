@@ -8,6 +8,7 @@ import com.bookworm.application.books.adapter.repository.BookRepositoryModule
 import com.bookworm.application.books.adapter.repository.dao.{AuthorDao, BookDao}
 import com.bookworm.application.books.adapter.service.{AuthorApplicationService, BookApplicationService}
 import com.bookworm.application.books.domain.port.inbound.{AddBookUseCase, GetBooksByGenreUseCase, RemoveBookUseCase, UpdateBookUseCase}
+import com.bookworm.application.config.Configuration.{Config, CustomerConfig}
 import com.bookworm.application.customers.adapter.api.CustomerRegistrationRestApi
 import com.bookworm.application.customers.adapter.repository.CustomerRepositoryModule
 import com.bookworm.application.customers.adapter.repository.dao.{CustomerDao, CustomerVerificationTokenDao}
@@ -31,12 +32,18 @@ object Main extends IOApp {
     BookwormServer.createTransactor
       .use { resources =>
         val injector = Guice.createInjector(
-          new Module(resources._1),
+          new Module(resources._1, resources._2),
           new BookRepositoryModule,
           new CustomerRepositoryModule
         )
         val httpApp = Logger.httpApp(logHeaders = true, logBody = true)(
-          Router("/" -> injector.getInstance(classOf[BookRestApi]).routes.<+>(injector.getInstance(classOf[AuthorRestApi]).routes)).orNotFound
+          Router(
+            "/" -> injector
+              .getInstance(classOf[BookRestApi])
+              .routes
+              .<+>(injector.getInstance(classOf[AuthorRestApi]).routes)
+              .<+>(injector.getInstance(classOf[CustomerRegistrationRestApi]).routes)
+          ).orNotFound
         )
         for {
           _ <- BookwormServer.migrate(resources._1)
@@ -49,7 +56,7 @@ object Main extends IOApp {
         } yield exitCode
       }
 
-  class Module(transactor: HikariTransactor[IO]) extends AbstractModule with ScalaModule {
+  class Module(transactor: HikariTransactor[IO], config: Config) extends AbstractModule with ScalaModule {
 
     import cats.effect._
 
@@ -76,6 +83,7 @@ object Main extends IOApp {
       bind(classOf[CustomerDao]).in(Scopes.SINGLETON)
       bind(classOf[CustomerVerificationTokenDao]).in(Scopes.SINGLETON)
       bind(classOf[java.time.Clock]).toInstance(java.time.Clock.systemUTC())
+      bind(classOf[CustomerConfig]).toInstance(config.customer)
     }
   }
 }

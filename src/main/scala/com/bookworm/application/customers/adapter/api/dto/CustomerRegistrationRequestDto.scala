@@ -1,8 +1,8 @@
 package com.bookworm.application.customers.adapter.api.dto
 
 import com.bookworm.application.customers.adapter.api.formats
+import com.bookworm.application.customers.adapter.service.model.InitiateCustomerRegistrationServiceModel
 import com.bookworm.application.customers.domain.model._
-import com.bookworm.application.customers.domain.port.inbound.command.InitiateCustomerRegistrationCommand
 import org.json4s.{Extraction, JValue, JsonFormat}
 
 import java.util.UUID
@@ -15,7 +15,7 @@ case class CustomerRegistrationRequestDto(
     password: String
 ) {
 
-  def toDomainCommandObject: Either[DomainValidationError, InitiateCustomerRegistrationCommand] =
+  def toServiceModel: Either[DomainValidationError, InitiateCustomerRegistrationServiceModel] =
     for {
       customerFirstName <- CustomerFirstName.create(firstName)
       customerLastName <- CustomerLastName.create(lastName)
@@ -23,7 +23,7 @@ case class CustomerRegistrationRequestDto(
       customerAge <- CustomerAge.create(age)
       customerPassword <- CustomerPassword.create(password)
       customerId = CustomerId(UUID.randomUUID())
-    } yield InitiateCustomerRegistrationCommand(
+    } yield InitiateCustomerRegistrationServiceModel(
       customerId,
       customerFirstName,
       customerLastName,
