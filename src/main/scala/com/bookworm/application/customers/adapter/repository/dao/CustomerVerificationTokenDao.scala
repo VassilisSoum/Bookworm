@@ -36,7 +36,17 @@ class CustomerVerificationTokenDao @Inject() (clock: Clock) {
     fr"""SELECT
         C.token,C.customerId,C.expirationDate
         FROM BOOKWORM.CUSTOMER_VERIFICATION_TOKEN C
-        WHERE c.token = ${verificationToken.value}"""
+        WHERE C.token = ${verificationToken.value}"""
       .query[CustomerVerificationToken]
       .option
+
+  def getAllCustomerVerificationTokensByCustomerId(
+    customerId: CustomerId
+  ): doobie.ConnectionIO[List[CustomerVerificationToken]] =
+    fr"""SELECT
+        C.token,C.customerId,C.expirationDate
+        FROM BOOKWORM.CUSTOMER_VERIFICATION_TOKEN C
+        WHERE C.customerId = ${customerId.id}"""
+      .query[CustomerVerificationToken]
+      .to[List]
 }

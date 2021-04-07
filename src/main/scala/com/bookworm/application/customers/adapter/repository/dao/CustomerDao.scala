@@ -30,6 +30,12 @@ class CustomerDao @Inject() (clock: Clock) {
       .query[CustomerQueryModel]
       .option
 
+  def getOptionalByCustomerEmail(customerEmail: CustomerEmail): doobie.ConnectionIO[Option[CustomerQueryModel]] =
+    fr"""SELECT C.id,C.firstName,C.lastName,C.username,C.age,C.registrationStatus FROM BOOKWORM.CUSTOMER C
+          WHERE C.username = ${customerEmail.value}"""
+      .query[CustomerQueryModel]
+      .option
+
   def insert(customer: Customer): doobie.ConnectionIO[Unit] = {
     val currentTimestamp = Timestamp.valueOf(LocalDateTime.now(clock))
 

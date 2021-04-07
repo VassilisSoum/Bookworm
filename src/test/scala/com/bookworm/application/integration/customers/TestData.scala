@@ -31,12 +31,7 @@ trait TestData extends IntegrationTestModule {
   )
 
   override def afterAll(): Unit = {
-    val transaction = for {
-      _ <- sql"""truncate table bookworm.customer CASCADE""".update.run
-      _ <- sql"""truncate table bookworm.CUSTOMER_VERIFICATION_TOKEN CASCADE""".update.run
-    } yield ()
-
-    transaction.transact(this.synchronousTransactor).unsafeRunSync()
+    clear()
     super.afterAll()
   }
 
@@ -50,4 +45,13 @@ trait TestData extends IntegrationTestModule {
 
   def setClockAt(value: Instant): Unit =
     fakeClock.current = value
+
+  def clear(): Unit = {
+    val transaction = for {
+      _ <- sql"""truncate table bookworm.CUSTOMER CASCADE""".update.run
+      _ <- sql"""truncate table bookworm.CUSTOMER_VERIFICATION_TOKEN CASCADE""".update.run
+    } yield ()
+
+    transaction.transact(this.synchronousTransactor).unsafeRunSync()
+  }
 }

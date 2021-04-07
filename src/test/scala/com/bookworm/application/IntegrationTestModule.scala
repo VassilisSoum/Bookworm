@@ -11,7 +11,7 @@ import com.bookworm.application.config.Configuration.CustomerConfig
 import com.bookworm.application.customers.adapter.api.CustomerRegistrationRestApi
 import com.bookworm.application.customers.adapter.repository.CustomerRepositoryModule
 import com.bookworm.application.customers.adapter.repository.dao.{CustomerDao, CustomerVerificationTokenDao}
-import com.bookworm.application.customers.adapter.service.{CustomerApplicationService, VerificationTokenApplicationService}
+import com.bookworm.application.customers.adapter.service.CustomerApplicationService
 import com.bookworm.application.customers.domain.port.inbound.{RegisterCustomerUseCase, VerificationTokenUseCase}
 import com.bookworm.application.integration.FakeClock
 import com.dimafeng.testcontainers.{Container, DockerComposeContainer, ExposedService, ForAllTestContainer}
@@ -75,7 +75,6 @@ abstract class IntegrationTestModule
         bind(new TypeLiteral[AuthorRestApi] {}).in(Scopes.SINGLETON)
         bind(new TypeLiteral[CustomerRegistrationRestApi] {}).in(Scopes.SINGLETON)
         bind(classOf[CustomerApplicationService]).in(Scopes.SINGLETON)
-        bind(classOf[VerificationTokenApplicationService]).in(Scopes.SINGLETON)
         bind(classOf[CustomerDao]).in(Scopes.SINGLETON)
         bind(classOf[CustomerVerificationTokenDao]).in(Scopes.SINGLETON)
         bind(classOf[java.time.Clock]).toInstance(fakeClock)

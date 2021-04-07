@@ -12,7 +12,7 @@ import com.bookworm.application.config.Configuration.{Config, CustomerConfig}
 import com.bookworm.application.customers.adapter.api.CustomerRegistrationRestApi
 import com.bookworm.application.customers.adapter.repository.CustomerRepositoryModule
 import com.bookworm.application.customers.adapter.repository.dao.{CustomerDao, CustomerVerificationTokenDao}
-import com.bookworm.application.customers.adapter.service.{CustomerApplicationService, VerificationTokenApplicationService}
+import com.bookworm.application.customers.adapter.service.CustomerApplicationService
 import com.bookworm.application.customers.domain.port.inbound.{RegisterCustomerUseCase, VerificationTokenUseCase}
 import com.bookworm.application.init.BookwormServer
 import com.google.inject._
@@ -79,7 +79,6 @@ object Main extends IOApp {
       bind(classOf[AuthorRestApi]).in(Scopes.SINGLETON)
       bind(classOf[CustomerRegistrationRestApi]).in(Scopes.SINGLETON)
       bind(classOf[CustomerApplicationService]).in(Scopes.SINGLETON)
-      bind(classOf[VerificationTokenApplicationService]).in(Scopes.SINGLETON)
       bind(classOf[CustomerDao]).in(Scopes.SINGLETON)
       bind(classOf[CustomerVerificationTokenDao]).in(Scopes.SINGLETON)
       bind(classOf[java.time.Clock]).toInstance(java.time.Clock.systemUTC())

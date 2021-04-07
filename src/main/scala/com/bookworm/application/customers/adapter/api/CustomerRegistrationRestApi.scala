@@ -19,6 +19,7 @@ class CustomerRegistrationRestApi @Inject() (customerApplicationService: Custome
     : EntityDecoder[IO, CompleteCustomerRegistrationRequestDto] =
     jsonOf[IO, CompleteCustomerRegistrationRequestDto]
 
+  //TODO: Add endpoint for retrieving a customer by customer id
   def routes: HttpRoutes[IO] =
     HttpRoutes.of[IO] {
       case req @ POST -> Root / "customers" / "registration" =>
@@ -38,7 +39,10 @@ class CustomerRegistrationRestApi @Inject() (customerApplicationService: Custome
         req.as[CompleteCustomerRegistrationRequestDto].flatMap { completeCustomerRegistrationRequestDto =>
           customerApplicationService
             .completeCustomerRegistration(completeCustomerRegistrationRequestDto.toServiceModel)
-            .flatMap(_ => NoContent())
+            .flatMap {
+              case Left(businessError) => Conflict(BusinessErrorDto.fromDomain(businessError))
+              case Right(_)            => NoContent()
+            }
         }
     }
 

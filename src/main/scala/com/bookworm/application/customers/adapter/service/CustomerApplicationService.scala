@@ -2,13 +2,14 @@ package com.bookworm.application.customers.adapter.service
 
 import cats.effect.IO
 import cats.implicits._
+import com.bookworm.application.config.Configuration.CustomerConfig
 import com.bookworm.application.customers.adapter.logger
 import com.bookworm.application.customers.adapter.producer.DomainEventProducer
 import com.bookworm.application.customers.adapter.service.model.{CompleteCustomerRegistrationServiceModel, InitiateCustomerRegistrationServiceModel}
 import com.bookworm.application.customers.domain.model.{DomainBusinessError, VerificationToken}
-import com.bookworm.application.customers.domain.port.inbound.RegisterCustomerUseCase
-import com.bookworm.application.customers.domain.port.inbound.command.{CompleteCustomerRegistrationCommand, InitiateCustomerRegistrationCommand}
+import com.bookworm.application.customers.domain.port.inbound.command.{CompleteCustomerRegistrationCommand, InitiateCustomerRegistrationCommand, SaveEmailVerificationTokenCommand}
 import com.bookworm.application.customers.domain.port.inbound.query.CustomerQueryModel
+import com.bookworm.application.customers.domain.port.inbound.{RegisterCustomerUseCase, VerificationTokenUseCase}
 import com.bookworm.application.customers.domain.port.outbound.event.{CompleteCustomerRegistrationFinishedEvent, DomainEventPublicationStatus, InitialCustomerRegistrationPendingEvent}
 import doobie.implicits._
 import doobie.{ConnectionIO, Transactor}
@@ -19,7 +20,9 @@ import javax.inject.Inject
 
 class CustomerApplicationService @Inject() (
     registerCustomerUseCase: RegisterCustomerUseCase[ConnectionIO],
+    verificationTokenUseCase: VerificationTokenUseCase[ConnectionIO],
     domainEventProducer: DomainEventProducer,
+    customerApplicationConfig: CustomerConfig,
     transactor: Transactor[IO],
     clock: Clock
 ) {
@@ -35,8 +38,22 @@ class CustomerApplicationService @Inject() (
       initiateCustomerRegistrationServiceModel.age,
       initiateCustomerRegistrationServiceModel.password
     )
-    registerCustomerUseCase
+
+    val verificationTokenExpiration =
+      LocalDateTime.now(clock).plusSeconds(customerApplicationConfig.verificationTokenExpirationInSeconds)
+    val saveEmailVerificationTokenCommand = SaveEmailVerificationTokenCommand(
+      VerificationToken(UUID.randomUUID()),
+      initiateCustomerRegistrationCommand.id,
+      verificationTokenExpiration
+    )
+    val initiateRegistrationResponse: ConnectionIO[Either[DomainBusinessError, Unit]] = registerCustomerUseCase
       .initiateRegistration(initiateCustomerRegistrationCommand)
+
+    initiateRegistrationResponse
+      .flatMap {
+        case Left(_)  => initiateRegistrationResponse
+        case Right(_) => verificationTokenUseCase.saveEmailVerificationToken(saveEmailVerificationTokenCommand)
+      }
       .transact(transactor)
       .flatTap(resultE =>
         IO.pure(
@@ -53,7 +70,7 @@ class CustomerApplicationService @Inject() (
                 id = UUID.randomUUID(),
                 customerId = initiateCustomerRegistrationCommand.id.id,
                 creationDate = LocalDateTime.now(clock),
-                verificationToken = VerificationToken(UUID.randomUUID())
+                verificationToken = saveEmailVerificationTokenCommand.token
               )
             )
             .flatTap {
