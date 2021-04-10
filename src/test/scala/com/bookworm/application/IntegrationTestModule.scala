@@ -1,24 +1,24 @@
 package com.bookworm.application
 
 import cats.effect.{Blocker, ContextShift, IO}
-import cats.{Monad, MonadError}
-import com.bookworm.application.books.adapter.api.{AuthorRestApi, BookRestApi}
+import com.bookworm.application.Main.Module
+import com.bookworm.application.books.adapter.api.BooksRestApiModule
 import com.bookworm.application.books.adapter.repository.BookRepositoryModule
-import com.bookworm.application.books.adapter.repository.dao.{AuthorDao, BookDao}
-import com.bookworm.application.books.adapter.service.{AuthorApplicationService, BookApplicationService}
-import com.bookworm.application.books.domain.port.inbound.{AddBookUseCase, GetBooksByGenreUseCase, RemoveBookUseCase, UpdateBookUseCase}
-import com.bookworm.application.config.Configuration.CustomerConfig
-import com.bookworm.application.customers.adapter.api.CustomerRegistrationRestApi
+import com.bookworm.application.books.adapter.repository.dao.BooksDaoModule
+import com.bookworm.application.books.adapter.service.BooksApplicationServiceModule
+import com.bookworm.application.config.Configuration.{CustomerConfig, ExpiredVerificationTokensSchedulerConfig}
+import com.bookworm.application.config.module.{BooksUseCasesModule, CustomersUseCasesModule}
+import com.bookworm.application.customers.adapter.api.CustomersRestApiModule
+import com.bookworm.application.customers.adapter.producer.CustomersDomainEventProducerModule
 import com.bookworm.application.customers.adapter.repository.CustomerRepositoryModule
-import com.bookworm.application.customers.adapter.repository.dao.{CustomerDao, CustomerVerificationTokenDao}
-import com.bookworm.application.customers.adapter.service.CustomerApplicationService
-import com.bookworm.application.customers.domain.port.inbound.{RegisterCustomerUseCase, VerificationTokenUseCase}
+import com.bookworm.application.customers.adapter.repository.dao.CustomersDaoModule
+import com.bookworm.application.customers.adapter.scheduler.VerificationTokenExpirationCleanupSchedulerModule
+import com.bookworm.application.customers.adapter.service.CustomersApplicationServiceModule
 import com.bookworm.application.integration.FakeClock
 import com.dimafeng.testcontainers.{Container, DockerComposeContainer, ExposedService, ForAllTestContainer}
 import com.google.inject._
+import doobie.ExecutionContexts
 import doobie.util.transactor.Transactor
-import doobie.{ConnectionIO, ExecutionContexts}
-import net.codingwell.scalaguice.ScalaModule
 import org.flywaydb.core.Flyway
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpec}
 
@@ -40,6 +40,9 @@ abstract class IntegrationTestModule
   private val password: String = "password"
   private val customerConfig: CustomerConfig = CustomerConfig(86400)
 
+  private val expiredVerificationTokensSchedulerConfig: ExpiredVerificationTokensSchedulerConfig =
+    ExpiredVerificationTokensSchedulerConfig(enabled = false, periodInMillis = 1000L)
+
   val fakeClock: FakeClock = new FakeClock
 
   override val container: Container =
@@ -53,39 +56,10 @@ abstract class IntegrationTestModule
     Blocker.liftExecutionContext(ExecutionContexts.synchronous)
   )
 
-  lazy val injector: Injector = Guice.createInjector(
-    new AbstractModule with ScalaModule {
-
-      override def configure(): Unit = {
-        bind(new TypeLiteral[Monad[ConnectionIO]] {}).toInstance(implicitly[Monad[ConnectionIO]])
-        bind(new TypeLiteral[MonadError[ConnectionIO, Throwable]] {})
-          .toInstance(implicitly[MonadError[ConnectionIO, Throwable]])
-        bind(classOf[BookDao]).in(Scopes.SINGLETON)
-        bind(classOf[AuthorDao]).in(Scopes.SINGLETON)
-        bind(classOf[BookApplicationService]).in(Scopes.SINGLETON)
-        bind(classOf[AuthorApplicationService]).in(Scopes.SINGLETON)
-        bind(new TypeLiteral[GetBooksByGenreUseCase[ConnectionIO]] {}).in(Scopes.SINGLETON)
-        bind(new TypeLiteral[AddBookUseCase[ConnectionIO]] {}).in(Scopes.SINGLETON)
-        bind(new TypeLiteral[RemoveBookUseCase[ConnectionIO]] {}).in(Scopes.SINGLETON)
-        bind(new TypeLiteral[UpdateBookUseCase[ConnectionIO]] {}).in(Scopes.SINGLETON)
-        bind(new TypeLiteral[RegisterCustomerUseCase[ConnectionIO]] {}).in(Scopes.SINGLETON)
-        bind(new TypeLiteral[VerificationTokenUseCase[ConnectionIO]] {}).in(Scopes.SINGLETON)
-        bind(new TypeLiteral[Transactor[IO]] {}).toInstance(synchronousTransactor)
-        bind(new TypeLiteral[BookRestApi] {}).in(Scopes.SINGLETON)
-        bind(new TypeLiteral[AuthorRestApi] {}).in(Scopes.SINGLETON)
-        bind(new TypeLiteral[CustomerRegistrationRestApi] {}).in(Scopes.SINGLETON)
-        bind(classOf[CustomerApplicationService]).in(Scopes.SINGLETON)
-        bind(classOf[CustomerDao]).in(Scopes.SINGLETON)
-        bind(classOf[CustomerVerificationTokenDao]).in(Scopes.SINGLETON)
-        bind(classOf[java.time.Clock]).toInstance(fakeClock)
-        bind(classOf[CustomerConfig]).toInstance(customerConfig)
-      }
-    },
-    new BookRepositoryModule,
-    new CustomerRepositoryModule
-  )
+  lazy val injector: Injector = wireDependencies(customerConfig, expiredVerificationTokensSchedulerConfig)
 
   override def beforeAll(): Unit = {
+
     fakeClock.current = LocalDateTime
       .of(2025, 2, 7, 10, 0, 0)
       .atZone(fakeClock.zoneId)
@@ -106,4 +80,24 @@ abstract class IntegrationTestModule
         }
       }
       .unsafeRunSync()
+
+  private def wireDependencies(
+    customerConfig: CustomerConfig,
+    expiredVerificationTokensSchedulerConfig: ExpiredVerificationTokensSchedulerConfig
+  ): Injector =
+    Guice.createInjector(
+      new Module(synchronousTransactor, fakeClock),
+      new BookRepositoryModule,
+      new BooksRestApiModule,
+      new CustomersRestApiModule,
+      new BooksDaoModule,
+      new BooksApplicationServiceModule,
+      new BooksUseCasesModule,
+      new CustomersUseCasesModule,
+      new CustomerRepositoryModule,
+      new CustomersDomainEventProducerModule,
+      new CustomersApplicationServiceModule(customerConfig),
+      new CustomersDaoModule,
+      new VerificationTokenExpirationCleanupSchedulerModule(expiredVerificationTokensSchedulerConfig)
+    )
 }

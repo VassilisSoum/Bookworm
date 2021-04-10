@@ -49,4 +49,12 @@ class CustomerVerificationTokenDao @Inject() (clock: Clock) {
         WHERE C.customerId = ${customerId.id}"""
       .query[CustomerVerificationToken]
       .to[List]
+
+  def deleteAllExpiredVerificationTokens(): doobie.ConnectionIO[Unit] = {
+    val currentTime = Timestamp.valueOf(LocalDateTime.now(clock))
+    fr"DELETE FROM BOOKWORM.CUSTOMER_VERIFICATION_TOKEN WHERE expirationDate <= $currentTime"
+      .update
+      .run
+      .map(_ => ())
+  }
 }

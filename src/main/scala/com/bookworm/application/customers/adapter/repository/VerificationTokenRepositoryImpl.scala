@@ -17,6 +17,9 @@ private[repository] class VerificationTokenRepositoryImpl @Inject() (
   override def removeAll(customerId: CustomerId): ConnectionIO[Unit] =
     customerVerificationTokenDao.deleteAll(customerId)
 
+  override def removeExpiredVerificationTokens(): ConnectionIO[Unit] =
+    customerVerificationTokenDao.deleteAllExpiredVerificationTokens()
+
   override def findBy(verificationToken: VerificationToken): ConnectionIO[Option[CustomerVerificationToken]] =
     customerVerificationTokenDao.getOptionalCustomerVerificationTokenBy(verificationToken)
 }

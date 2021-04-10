@@ -30,4 +30,7 @@ class VerificationTokenUseCase[F[_]: Monad] @Inject() (
       case None =>
         Monad[F].pure(Left(DomainBusinessError.CustomerDoesNotExists))
     }
+
+  def removeExpiredVerificationTokens(): F[Unit] =
+    verificationTokenRepository.removeExpiredVerificationTokens()
 }

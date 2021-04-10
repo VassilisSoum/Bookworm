@@ -13,7 +13,14 @@ object Configuration {
 
   case class CustomerConfig(verificationTokenExpirationInSeconds: Long)
 
-  case class Config(server: ServerConfig, database: DatabaseConfig, customer: CustomerConfig)
+  case class ExpiredVerificationTokensSchedulerConfig(enabled: Boolean, periodInMillis: Long)
+
+  case class Config(
+      server: ServerConfig,
+      database: DatabaseConfig,
+      customer: CustomerConfig,
+      expiredVerificationTokensScheduler: ExpiredVerificationTokensSchedulerConfig
+  )
 
   def load(configFile: String = "application.conf")(implicit contextShift: ContextShift[IO]): Resource[IO, Config] =
     Blocker[IO].flatMap { blocker =>

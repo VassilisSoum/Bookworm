@@ -27,12 +27,16 @@ class BookApplicationService @Inject() (
       .retrieveBooksByGenre(genre, paginationInfo)
       .transact(transactor)
       .attempt
+      .flatTap {
+        case Left(failure) =>
+          IO.pure(logger.error(s"Failure to retrieve books by genre ${genre.id}. $failure"))
+        case Right(_) =>
+          IO.pure(logger.info(s"Successfully retrieved books for genre ${genre.id}"))
+      }
       .flatMap {
         case Left(failure) =>
-          logger.error(s"Failure to retrieve books by genre ${genre.id}. $failure")
           IO.raiseError(failure)
         case Right(booksByGenreQuery) =>
-          logger.info(s"Successfully retrieved books for genre ${genre.id}")
           IO.pure(booksByGenreQuery)
       }
 

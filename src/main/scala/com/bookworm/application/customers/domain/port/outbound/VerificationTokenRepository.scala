@@ -5,5 +5,6 @@ import com.bookworm.application.customers.domain.model.{CustomerId, CustomerVeri
 trait VerificationTokenRepository[F[_]] {
   def save(customerVerificationToken: CustomerVerificationToken): F[Unit]
   def removeAll(customerId: CustomerId): F[Unit]
+  def removeExpiredVerificationTokens(): F[Unit]
   def findBy(verificationToken: VerificationToken): F[Option[CustomerVerificationToken]]
 }

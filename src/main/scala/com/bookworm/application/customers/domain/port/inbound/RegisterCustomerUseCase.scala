@@ -1,7 +1,7 @@
 package com.bookworm.application.customers.domain.port.inbound
 
+import cats.Monad
 import cats.implicits._
-import cats.{Monad, MonadError}
 import com.bookworm.application.customers.domain.model.{CustomerId, CustomerRegistrationStatus, DomainBusinessError}
 import com.bookworm.application.customers.domain.port.inbound.command.{CompleteCustomerRegistrationCommand, InitiateCustomerRegistrationCommand}
 import com.bookworm.application.customers.domain.port.inbound.query.CustomerQueryModel
@@ -14,7 +14,7 @@ class RegisterCustomerUseCase[F[_]: Monad] @Inject() (
     customerRepository: CustomerRepository[F],
     verificationTokenRepository: VerificationTokenRepository[F],
     clock: Clock
-)(implicit M: MonadError[F, Throwable]) {
+) {
 
   def initiateRegistration(
     initiateCustomerRegistrationCommand: InitiateCustomerRegistrationCommand

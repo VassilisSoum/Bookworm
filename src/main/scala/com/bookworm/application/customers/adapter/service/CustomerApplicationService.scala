@@ -118,7 +118,7 @@ class CustomerApplicationService @Inject() (
                 case DomainEventPublicationStatus.NotPublished =>
                   IO.pure(logger.error("Could not publish initial customer registration event"))
               }
-              .flatMap(_ => IO.pure(resultE))
+              .map(_ => resultE)
           case Left(_) =>
             IO.pure(resultE)
         }
