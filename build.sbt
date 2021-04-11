@@ -17,7 +17,7 @@ lazy val root = (project in file("."))
   .settings(
     organization := "com.bookworm",
     name := "bookworm",
-    version := "0.0.1-SNAPSHOT",
+    version := "1.0",
     scalaVersion := "2.13.3",
     scalacOptions ++= Seq(
       "-encoding",
@@ -30,6 +30,13 @@ lazy val root = (project in file("."))
       "-language:existentials",
       "-language:postfixOps"
     ),
+    assemblyJarName in assembly := "bookworm.jar",
+    assemblyMergeStrategy in assembly := {
+      case "application.conf" => MergeStrategy.concat
+      case x =>
+        val oldStrategy = (assemblyMergeStrategy in assembly).value
+        oldStrategy(x)
+    },
     libraryDependencies ++= Seq(
       "org.http4s" %% "http4s-blaze-server" % Http4sVersion,
       "org.http4s" %% "http4s-blaze-client" % Http4sVersion,
