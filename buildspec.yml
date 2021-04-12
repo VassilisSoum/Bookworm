@@ -7,5 +7,11 @@ phases:
       - aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
   build:
     commands:
-      - echo Running tests
-      - sbt test
+      - echo Running tests and packaging jar file
+      - sbt assembly
+  post_build:
+    commands:
+      - echo Creating docker image
+      - docker build -t bookworm .
+      - echo Publishing docker image to ECR
+      - docker tag bookworm 308605260180.dkr.ecr.us-east-2.amazonaws.com/bookworm && docker push 308605260180.dkr.ecr.us-east-2.amazonaws.com/bookworm
