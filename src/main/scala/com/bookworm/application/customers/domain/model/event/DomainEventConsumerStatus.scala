@@ -1,4 +1,4 @@
-package com.bookworm.application.customers.domain.port.inbound.event
+package com.bookworm.application.customers.domain.model.event
 
 sealed trait DomainEventConsumerStatus
 

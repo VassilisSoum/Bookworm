@@ -1,4 +1,4 @@
-package com.bookworm.application.customers.domain.port.outbound.event
+package com.bookworm.application.customers.domain.model.event
 
 import com.bookworm.application.customers.domain.model.VerificationToken
 
@@ -10,4 +10,4 @@ case class InitialCustomerRegistrationPendingEvent(
     override val customerId: UUID,
     override val creationDate: LocalDateTime,
     verificationToken: VerificationToken
-) extends OutboundDomainEvent
+) extends DomainEvent

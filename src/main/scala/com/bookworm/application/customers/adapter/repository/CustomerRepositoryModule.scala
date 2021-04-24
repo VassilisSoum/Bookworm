@@ -1,6 +1,6 @@
 package com.bookworm.application.customers.adapter.repository
 
-import com.bookworm.application.customers.domain.port.outbound.{CustomerRepository, VerificationTokenRepository}
+import com.bookworm.application.customers.domain.port.outbound.{CustomerEmailTemplateRepository, CustomerRepository, VerificationTokenRepository}
 import com.google.inject.{AbstractModule, Scopes, TypeLiteral}
 import doobie.ConnectionIO
 import net.codingwell.scalaguice.ScalaModule
@@ -14,6 +14,10 @@ class CustomerRepositoryModule extends AbstractModule with ScalaModule {
 
     bind(new TypeLiteral[VerificationTokenRepository[ConnectionIO]]() {})
       .to(new TypeLiteral[VerificationTokenRepositoryImpl]() {})
+      .in(Scopes.SINGLETON)
+
+    bind(new TypeLiteral[CustomerEmailTemplateRepository[ConnectionIO]]() {})
+      .to(new TypeLiteral[CustomerEmailTemplateRepositoryImpl]() {})
       .in(Scopes.SINGLETON)
   }
 }

@@ -9,12 +9,12 @@ import com.bookworm.application.books.adapter.repository.dao.BooksDaoModule
 import com.bookworm.application.books.adapter.service.BooksApplicationServiceModule
 import com.bookworm.application.config.module.{BooksUseCasesModule, CustomersUseCasesModule}
 import com.bookworm.application.customers.adapter.api.{CustomerRegistrationRestApi, CustomersRestApiModule}
-import com.bookworm.application.customers.adapter.producer.CustomersDomainEventProducerModule
+import com.bookworm.application.customers.adapter.publisher.CustomersDomainEventPublisherModule
 import com.bookworm.application.customers.adapter.repository.CustomerRepositoryModule
 import com.bookworm.application.customers.adapter.repository.dao.CustomersDaoModule
 import com.bookworm.application.customers.adapter.scheduler.{VerificationTokenExpirationCleanupScheduler, VerificationTokenExpirationCleanupSchedulerModule}
 import com.bookworm.application.customers.adapter.service.CustomersApplicationServiceModule
-import com.bookworm.application.init.BookwormServer
+import com.bookworm.application.init.{DatabaseInit, ThreadPoolCreator}
 import com.google.common.util.concurrent.{AbstractScheduledService, Service}
 import com.google.inject._
 import doobie.{ConnectionIO, Transactor}
@@ -32,7 +32,12 @@ import scala.concurrent.ExecutionContext.global
 object Main extends IOApp {
 
   def run(args: List[String]): IO[ExitCode] =
-    BookwormServer.createTransactor
+    DatabaseInit.createTransactor
+      .flatMap(resources =>
+        ThreadPoolCreator
+          .createFixedThreadPool(resources._2.customer.customerRegistrationVerificationConfig.threadPoolSize)
+          .map(sesThreadPool => (resources._1, resources._2, sesThreadPool))
+      )
       .use { resources =>
         val injector = Guice.createInjector(
           new Module(resources._1, java.time.Clock.systemUTC()),
@@ -44,8 +49,8 @@ object Main extends IOApp {
           new BooksUseCasesModule,
           new CustomersUseCasesModule,
           new CustomerRepositoryModule,
-          new CustomersDomainEventProducerModule,
-          new CustomersApplicationServiceModule(resources._2.customer),
+          new CustomersDomainEventPublisherModule,
+          new CustomersApplicationServiceModule(resources._2.customer, resources._3),
           new CustomersDaoModule,
           new VerificationTokenExpirationCleanupSchedulerModule(resources._2.expiredVerificationTokensScheduler)
         )
@@ -63,7 +68,7 @@ object Main extends IOApp {
           ).orNotFound
         )
         for {
-          _ <- BookwormServer.migrate(resources._1)
+          _ <- DatabaseInit.migrate(resources._1)
           _ = startSchedulers(schedulers).unsafeRunSync()
           exitCode <- BlazeServerBuilder[IO](global)
             .bindHttp(resources._2.server.port, resources._2.server.host)
@@ -82,6 +87,9 @@ object Main extends IOApp {
       bind(new TypeLiteral[Monad[ConnectionIO]] {}).toInstance(implicitly[Monad[ConnectionIO]])
       bind(new TypeLiteral[MonadError[ConnectionIO, Throwable]] {})
         .toInstance(implicitly[MonadError[ConnectionIO, Throwable]])
+      bind(new TypeLiteral[MonadError[IO, Throwable]] {})
+        .toInstance(implicitly[MonadError[IO, Throwable]])
+      bind(new TypeLiteral[ContextShift[IO]] {}).toInstance(implicitly(ContextShift[IO]))
       bind(new TypeLiteral[Transactor[IO]] {}).toInstance(transactor)
       bind(classOf[java.time.Clock]).toInstance(clock)
     }

@@ -1,4 +1,4 @@
-package com.bookworm.application.customers.domain.port.outbound.event
+package com.bookworm.application.customers.domain.model.event
 
 sealed trait DomainEventPublicationStatus
 

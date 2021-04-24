@@ -11,7 +11,18 @@ object Configuration {
 
   case class DatabaseConfig(driver: String, url: String, user: String, password: String, threadPoolSize: Int)
 
-  case class CustomerConfig(verificationTokenExpirationInSeconds: Long)
+  case class CustomerRegistrationVerificationConfig(
+      senderEmail: String,
+      awsRegion: String,
+      sesConfigurationSet: String,
+      registrationVerificationEmailTemplateName: String,
+      threadPoolSize: Int
+  )
+
+  case class CustomerConfig(
+      verificationTokenExpirationInSeconds: Long,
+      customerRegistrationVerificationConfig: CustomerRegistrationVerificationConfig
+  )
 
   case class ExpiredVerificationTokensSchedulerConfig(enabled: Boolean, periodInMillis: Long)
 

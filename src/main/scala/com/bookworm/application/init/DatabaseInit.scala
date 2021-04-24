@@ -3,18 +3,17 @@ package com.bookworm.application.init
 import cats.effect.{Blocker, ContextShift, IO, Resource}
 import com.bookworm.application.config.Configuration
 import com.bookworm.application.config.Configuration.{Config, DatabaseConfig}
-import doobie.ExecutionContexts
 import doobie.hikari.HikariTransactor
 import org.flywaydb.core.Flyway
 
 import scala.concurrent.ExecutionContext
 
-object BookwormServer {
+object DatabaseInit {
 
   def createTransactor(implicit contextShift: ContextShift[IO]): Resource[IO, (HikariTransactor[IO], Config)] =
     for {
       config <- Configuration.load()
-      ec <- ExecutionContexts.fixedThreadPool[IO](config.database.threadPoolSize)
+      ec <- ThreadPoolCreator.createFixedThreadPool(config.database.threadPoolSize)
       blocker <- Blocker[IO]
       transactor <- transactor(config.database, ec, blocker)
     } yield (transactor, config)

@@ -6,20 +6,22 @@ import com.bookworm.application.books.adapter.api.BooksRestApiModule
 import com.bookworm.application.books.adapter.repository.BookRepositoryModule
 import com.bookworm.application.books.adapter.repository.dao.BooksDaoModule
 import com.bookworm.application.books.adapter.service.BooksApplicationServiceModule
-import com.bookworm.application.config.Configuration.{CustomerConfig, ExpiredVerificationTokensSchedulerConfig}
+import com.bookworm.application.config.Configuration.{CustomerConfig, CustomerRegistrationVerificationConfig, ExpiredVerificationTokensSchedulerConfig}
 import com.bookworm.application.config.module.{BooksUseCasesModule, CustomersUseCasesModule}
 import com.bookworm.application.customers.adapter.api.CustomersRestApiModule
-import com.bookworm.application.customers.adapter.producer.CustomersDomainEventProducerModule
+import com.bookworm.application.customers.adapter.publisher.DomainEventPublisher
 import com.bookworm.application.customers.adapter.repository.CustomerRepositoryModule
 import com.bookworm.application.customers.adapter.repository.dao.CustomersDaoModule
 import com.bookworm.application.customers.adapter.scheduler.VerificationTokenExpirationCleanupSchedulerModule
 import com.bookworm.application.customers.adapter.service.CustomersApplicationServiceModule
 import com.bookworm.application.integration.FakeClock
+import com.bookworm.application.integration.customers.{CustomerTestModule, FakeDomainEventPublisher}
 import com.dimafeng.testcontainers.{Container, DockerComposeContainer, ExposedService, ForAllTestContainer}
 import com.google.inject._
 import doobie.ExecutionContexts
 import doobie.util.transactor.Transactor
 import org.flywaydb.core.Flyway
+import org.scalamock.scalatest.MockFactory
 import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Matchers, WordSpec}
 
 import java.io.File
@@ -30,6 +32,7 @@ abstract class IntegrationTestModule
   with Matchers
   with BeforeAndAfterAll
   with BeforeAndAfterEach
+  with MockFactory
   with ForAllTestContainer {
 
   implicit private val contextShift: ContextShift[IO] = IO.contextShift(ExecutionContexts.synchronous)
@@ -38,12 +41,26 @@ abstract class IntegrationTestModule
   private val jdbcUrl: String = s"jdbc:postgresql://localhost:5432/$databaseName"
   private val username: String = "Bookworm"
   private val password: String = "password"
-  private val customerConfig: CustomerConfig = CustomerConfig(86400)
+
+  private val customerRegistrationVerificationConfig: CustomerRegistrationVerificationConfig =
+    CustomerRegistrationVerificationConfig(
+      "senderEmail@test.com",
+      "us-east-2",
+      "bookworm-ses-set",
+      "verification-email-template",
+      32
+    )
+  private val customerConfig: CustomerConfig = CustomerConfig(86400, customerRegistrationVerificationConfig)
 
   private val expiredVerificationTokensSchedulerConfig: ExpiredVerificationTokensSchedulerConfig =
     ExpiredVerificationTokensSchedulerConfig(enabled = false, periodInMillis = 1000L)
 
   val fakeClock: FakeClock = new FakeClock
+
+  val customerDomainEventPublisher: DomainEventPublisher = new FakeDomainEventPublisher(
+    customerRegistrationVerificationEmailProducerService = null,
+    customerApplicationService = null
+  )
 
   override val container: Container =
     DockerComposeContainer(new File("docker-compose.yml"), exposedServices = Seq(ExposedService("db", 5432)))
@@ -95,8 +112,8 @@ abstract class IntegrationTestModule
       new BooksUseCasesModule,
       new CustomersUseCasesModule,
       new CustomerRepositoryModule,
-      new CustomersDomainEventProducerModule,
-      new CustomersApplicationServiceModule(customerConfig),
+      new CustomerTestModule(customerDomainEventPublisher),
+      new CustomersApplicationServiceModule(customerConfig, ExecutionContexts.synchronous),
       new CustomersDaoModule,
       new VerificationTokenExpirationCleanupSchedulerModule(expiredVerificationTokensSchedulerConfig)
     )
