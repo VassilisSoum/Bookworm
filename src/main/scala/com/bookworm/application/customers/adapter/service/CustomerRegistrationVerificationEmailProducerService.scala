@@ -3,9 +3,9 @@ package com.bookworm.application.customers.adapter.service
 import cats.effect.{ContextShift, IO}
 import com.amazonaws.services.simpleemail.AmazonSimpleEmailService
 import com.amazonaws.services.simpleemail.model._
-import com.bookworm.application.config.Configuration.CustomerConfig
+import com.bookworm.application.config.Configuration.{AwsConfig, CustomerConfig}
 import com.bookworm.application.customers.adapter.logger
-import com.bookworm.application.customers.adapter.service.CustomerRegistrationVerificationEmailProducerService.{customerFirstNameEmailField, customerLastNameEmailField}
+import com.bookworm.application.customers.adapter.service.CustomerRegistrationVerificationEmailProducerService.{customerFirstNameEmailField, customerLastNameEmailField, registrationVerificationLinkField}
 import com.bookworm.application.customers.adapter.service.model.SendEmailVerificationServiceModel
 import com.bookworm.application.customers.domain.port.inbound.query.EmailTemplateQueryModel
 import com.bookworm.application.customers.domain.port.outbound.CustomerEmailTemplateRepository
@@ -20,6 +20,7 @@ import scala.util.{Failure, Success, Try}
 class CustomerRegistrationVerificationEmailProducerService @Inject() (
     customerEmailTemplateRepository: CustomerEmailTemplateRepository[ConnectionIO],
     customerConfig: CustomerConfig,
+    awsConfig: AwsConfig,
     amazonSimpleEmailService: AmazonSimpleEmailService,
     transactor: Transactor[IO],
     awsSesExecutionContext: ExecutionContext
@@ -33,9 +34,13 @@ class CustomerRegistrationVerificationEmailProducerService @Inject() (
     customerEmailTemplateRepository
       .findBy(registrationVerificationEmailTemplateName)
       .transact(transactor)
+      .attempt
       .flatMap {
-        case Some(emailTemplateQueryModel) =>
-          val sendEmailRequest = constructEmailRequest(sendEmailVerificationServiceModel, emailTemplateQueryModel)
+        case Left(throwable) =>
+          IO.delay(logger.error("{}", throwable)).map(_ => Failure(throwable))
+        case Right(Some(emailTemplateQueryModel)) =>
+          val sendEmailRequest: SendEmailRequest =
+            constructEmailRequest(sendEmailVerificationServiceModel, emailTemplateQueryModel)
 
           CS.evalOn(awsSesExecutionContext)(
             IO.delay(amazonSimpleEmailService.sendEmail(sendEmailRequest)).attempt.flatMap {
@@ -55,7 +60,7 @@ class CustomerRegistrationVerificationEmailProducerService @Inject() (
             }
           )
 
-        case None =>
+        case Right(None) =>
           IO.delay(logger.error(s"Unknown template name $registrationVerificationEmailTemplateName"))
             .map(_ => Failure(new IllegalStateException("Unknown template name")))
       }
@@ -79,6 +84,10 @@ class CustomerRegistrationVerificationEmailProducerService @Inject() (
                   emailTemplateQueryModel.templateBody
                     .replace(customerFirstNameEmailField, sendEmailVerificationServiceModel.customerFirstName)
                     .replace(customerLastNameEmailField, sendEmailVerificationServiceModel.customerLastName)
+                    .replace(
+                      registrationVerificationLinkField,
+                      sendEmailVerificationServiceModel.verificationToken.toString
+                    )
                 )
             )
           )
@@ -89,10 +98,11 @@ class CustomerRegistrationVerificationEmailProducerService @Inject() (
           )
       )
       .withSource(customerConfig.customerRegistrationVerificationConfig.senderEmail)
-      .withConfigurationSetName(customerConfig.customerRegistrationVerificationConfig.sesConfigurationSet)
+      .withConfigurationSetName(awsConfig.sesConfigurationSet)
 }
 
 object CustomerRegistrationVerificationEmailProducerService {
-  private val customerFirstNameEmailField: String = "CustomerFirstNameField"
-  private val customerLastNameEmailField: String = "CustomerLastNameField"
+  private val customerFirstNameEmailField: String = "{CustomerFirstNameField}"
+  private val customerLastNameEmailField: String = "{CustomerLastNameField}"
+  private val registrationVerificationLinkField: String = "{RegistrationVerificationToken}"
 }

@@ -3,10 +3,13 @@ package com.bookworm.application
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.syntax.semigroupk._
 import cats.{Monad, MonadError}
+import com.amazonaws.auth.EnvironmentVariableCredentialsProvider
+import com.amazonaws.services.simpleemail.{AmazonSimpleEmailService, AmazonSimpleEmailServiceClientBuilder}
 import com.bookworm.application.books.adapter.api.{AuthorRestApi, BookRestApi, BooksRestApiModule}
 import com.bookworm.application.books.adapter.repository.BookRepositoryModule
 import com.bookworm.application.books.adapter.repository.dao.BooksDaoModule
 import com.bookworm.application.books.adapter.service.BooksApplicationServiceModule
+import com.bookworm.application.config.Configuration
 import com.bookworm.application.config.module.{BooksUseCasesModule, CustomersUseCasesModule}
 import com.bookworm.application.customers.adapter.api.{CustomerRegistrationRestApi, CustomersRestApiModule}
 import com.bookworm.application.customers.adapter.publisher.CustomersDomainEventPublisherModule
@@ -17,6 +20,7 @@ import com.bookworm.application.customers.adapter.service.CustomersApplicationSe
 import com.bookworm.application.init.{DatabaseInit, ThreadPoolCreator}
 import com.google.common.util.concurrent.{AbstractScheduledService, Service}
 import com.google.inject._
+import doobie.hikari.HikariTransactor
 import doobie.{ConnectionIO, Transactor}
 import net.codingwell.scalaguice.ScalaModule
 import org.http4s.implicits.http4sKleisliResponseSyntaxOptionT
@@ -27,6 +31,7 @@ import org.http4s.server.middleware.Logger
 import java.time.Clock
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
+import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.global
 
 object Main extends IOApp {
@@ -38,7 +43,12 @@ object Main extends IOApp {
           .createFixedThreadPool(resources._2.customer.customerRegistrationVerificationConfig.threadPoolSize)
           .map(sesThreadPool => (resources._1, resources._2, sesThreadPool))
       )
-      .use { resources =>
+      .use { resources: (HikariTransactor[IO], Configuration.Config, ExecutionContext) =>
+        val amazonSimpleEmailService: AmazonSimpleEmailService = AmazonSimpleEmailServiceClientBuilder
+          .standard()
+          .withRegion(resources._2.aws.awsRegion)
+          .withCredentials(new EnvironmentVariableCredentialsProvider())
+          .build()
         val injector = Guice.createInjector(
           new Module(resources._1, java.time.Clock.systemUTC()),
           new BookRepositoryModule,
@@ -50,7 +60,12 @@ object Main extends IOApp {
           new CustomersUseCasesModule,
           new CustomerRepositoryModule,
           new CustomersDomainEventPublisherModule,
-          new CustomersApplicationServiceModule(resources._2.customer, resources._3),
+          new CustomersApplicationServiceModule(
+            customerConfig = resources._2.customer,
+            awsConfig = resources._2.aws,
+            amazonSimpleEmailService = amazonSimpleEmailService,
+            executionContext = resources._3
+          ),
           new CustomersDaoModule,
           new VerificationTokenExpirationCleanupSchedulerModule(resources._2.expiredVerificationTokensScheduler)
         )

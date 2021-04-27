@@ -2,8 +2,8 @@ package com.bookworm.application.customers.adapter.publisher
 
 import cats.effect.IO
 import com.bookworm.application.AbstractUnitTest
+import com.bookworm.application.customers.adapter.service.CustomerRegistrationVerificationEmailProducerService
 import com.bookworm.application.customers.adapter.service.model.SendEmailVerificationServiceModel
-import com.bookworm.application.customers.adapter.service.{CustomerApplicationService, CustomerRegistrationVerificationEmailProducerService}
 import com.bookworm.application.customers.domain.model.event.{DomainEvent, DomainEventPublicationStatus, InitialCustomerRegistrationPendingEvent}
 
 import java.time.LocalDateTime
@@ -12,10 +12,9 @@ import scala.util.Success
 
 class DomainEventPublisherTest extends AbstractUnitTest {
   val customerRegistrationVerificationEmailProducerService = mock[CustomerRegistrationVerificationEmailProducerService]
-  val customerApplicationService = mock[CustomerApplicationService]
 
   val domainEventPublisher =
-    new DomainEventPublisher(customerRegistrationVerificationEmailProducerService, customerApplicationService)
+    new DomainEventPublisher(customerRegistrationVerificationEmailProducerService)
 
   "DomainEventPublisher" should {
     "publish an InitialCustomerRegistrationPendingEvent and return Published as response" in {
@@ -23,7 +22,10 @@ class DomainEventPublisherTest extends AbstractUnitTest {
         id = UUID.randomUUID(),
         customerId = customerId.id,
         creationDate = LocalDateTime.now(),
-        verificationToken = verificationToken
+        verificationToken = verificationToken,
+        customerFirstName.value,
+        customerLastName.value,
+        customerEmail.value
       )
 
       val expectedSendEmailVerificationServiceModel = SendEmailVerificationServiceModel(
@@ -33,10 +35,6 @@ class DomainEventPublisherTest extends AbstractUnitTest {
         verificationToken = verificationToken.value
       )
 
-      (customerApplicationService.retrieveCustomerDetails _)
-        .expects(customerId)
-        .returns(IO.pure(Some(pendingCustomerQueryModel)))
-
       (customerRegistrationVerificationEmailProducerService.sendRegistrationVerificationEmail _)
         .expects(expectedSendEmailVerificationServiceModel)
         .returns(IO.pure(Success(())))
@@ -44,28 +42,6 @@ class DomainEventPublisherTest extends AbstractUnitTest {
       domainEventPublisher
         .publish(initialCustomerRegistrationPendingEvent)
         .unsafeRunSync() shouldBe DomainEventPublicationStatus.Published
-    }
-
-    "Don't publish the event when the customer id does not exist when " +
-    "sending a InitialCustomerRegistrationPendingEvent" in {
-      val initialCustomerRegistrationPendingEvent = InitialCustomerRegistrationPendingEvent(
-        id = UUID.randomUUID(),
-        customerId = customerId.id,
-        creationDate = LocalDateTime.now(),
-        verificationToken = verificationToken
-      )
-
-      (customerApplicationService.retrieveCustomerDetails _)
-        .expects(customerId)
-        .returns(IO.pure(None))
-
-      (customerRegistrationVerificationEmailProducerService.sendRegistrationVerificationEmail _)
-        .expects(*)
-        .never()
-
-      domainEventPublisher
-        .publish(initialCustomerRegistrationPendingEvent)
-        .unsafeRunSync() shouldBe DomainEventPublicationStatus.NotPublished
     }
 
     "return NotPublished when the event is not supported" in {

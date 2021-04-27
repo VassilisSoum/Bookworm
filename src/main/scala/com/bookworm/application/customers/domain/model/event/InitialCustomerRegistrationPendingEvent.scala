@@ -9,5 +9,8 @@ case class InitialCustomerRegistrationPendingEvent(
     override val id: UUID,
     override val customerId: UUID,
     override val creationDate: LocalDateTime,
-    verificationToken: VerificationToken
+    verificationToken: VerificationToken,
+    customerFirstName: String,
+    customerLastName: String,
+    customerEmail: String
 ) extends DomainEvent

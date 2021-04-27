@@ -1,12 +1,13 @@
 package com.bookworm.application
 
 import cats.effect.{Blocker, ContextShift, IO}
+import com.amazonaws.services.simpleemail.AmazonSimpleEmailService
 import com.bookworm.application.Main.Module
 import com.bookworm.application.books.adapter.api.BooksRestApiModule
 import com.bookworm.application.books.adapter.repository.BookRepositoryModule
 import com.bookworm.application.books.adapter.repository.dao.BooksDaoModule
 import com.bookworm.application.books.adapter.service.BooksApplicationServiceModule
-import com.bookworm.application.config.Configuration.{CustomerConfig, CustomerRegistrationVerificationConfig, ExpiredVerificationTokensSchedulerConfig}
+import com.bookworm.application.config.Configuration.{AwsConfig, CustomerConfig, CustomerRegistrationVerificationConfig, ExpiredVerificationTokensSchedulerConfig}
 import com.bookworm.application.config.module.{BooksUseCasesModule, CustomersUseCasesModule}
 import com.bookworm.application.customers.adapter.api.CustomersRestApiModule
 import com.bookworm.application.customers.adapter.publisher.DomainEventPublisher
@@ -42,15 +43,14 @@ abstract class IntegrationTestModule
   private val username: String = "Bookworm"
   private val password: String = "password"
 
-  private val customerRegistrationVerificationConfig: CustomerRegistrationVerificationConfig =
+  val customerRegistrationVerificationConfig: CustomerRegistrationVerificationConfig =
     CustomerRegistrationVerificationConfig(
       "senderEmail@test.com",
-      "us-east-2",
-      "bookworm-ses-set",
       "verification-email-template",
       32
     )
   private val customerConfig: CustomerConfig = CustomerConfig(86400, customerRegistrationVerificationConfig)
+  private val awsConfig: AwsConfig = AwsConfig("us-east-2", "bookworm-ses-set")
 
   private val expiredVerificationTokensSchedulerConfig: ExpiredVerificationTokensSchedulerConfig =
     ExpiredVerificationTokensSchedulerConfig(enabled = false, periodInMillis = 1000L)
@@ -58,9 +58,10 @@ abstract class IntegrationTestModule
   val fakeClock: FakeClock = new FakeClock
 
   val customerDomainEventPublisher: DomainEventPublisher = new FakeDomainEventPublisher(
-    customerRegistrationVerificationEmailProducerService = null,
-    customerApplicationService = null
+    customerRegistrationVerificationEmailProducerService = null
   )
+
+  val amazonSimpleEmailService: AmazonSimpleEmailService = mock[AmazonSimpleEmailService]
 
   override val container: Container =
     DockerComposeContainer(new File("docker-compose.yml"), exposedServices = Seq(ExposedService("db", 5432)))
@@ -113,7 +114,12 @@ abstract class IntegrationTestModule
       new CustomersUseCasesModule,
       new CustomerRepositoryModule,
       new CustomerTestModule(customerDomainEventPublisher),
-      new CustomersApplicationServiceModule(customerConfig, ExecutionContexts.synchronous),
+      new CustomersApplicationServiceModule(
+        customerConfig = customerConfig,
+        awsConfig = awsConfig,
+        amazonSimpleEmailService = amazonSimpleEmailService,
+        executionContext = ExecutionContexts.synchronous
+      ),
       new CustomersDaoModule,
       new VerificationTokenExpirationCleanupSchedulerModule(expiredVerificationTokensSchedulerConfig)
     )

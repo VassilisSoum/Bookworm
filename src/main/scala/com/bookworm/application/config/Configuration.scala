@@ -13,11 +13,11 @@ object Configuration {
 
   case class CustomerRegistrationVerificationConfig(
       senderEmail: String,
-      awsRegion: String,
-      sesConfigurationSet: String,
       registrationVerificationEmailTemplateName: String,
       threadPoolSize: Int
   )
+
+  case class AwsConfig(awsRegion: String, sesConfigurationSet: String)
 
   case class CustomerConfig(
       verificationTokenExpirationInSeconds: Long,
@@ -30,7 +30,8 @@ object Configuration {
       server: ServerConfig,
       database: DatabaseConfig,
       customer: CustomerConfig,
-      expiredVerificationTokensScheduler: ExpiredVerificationTokensSchedulerConfig
+      expiredVerificationTokensScheduler: ExpiredVerificationTokensSchedulerConfig,
+      aws: AwsConfig
   )
 
   def load(configFile: String = "application.conf")(implicit contextShift: ContextShift[IO]): Resource[IO, Config] =

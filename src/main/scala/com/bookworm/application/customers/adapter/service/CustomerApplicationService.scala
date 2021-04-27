@@ -71,7 +71,10 @@ class CustomerApplicationService @Inject() (
                 id = UUID.randomUUID(),
                 customerId = initiateCustomerRegistrationCommand.id.id,
                 creationDate = LocalDateTime.now(clock),
-                verificationToken = saveEmailVerificationTokenCommand.token
+                verificationToken = saveEmailVerificationTokenCommand.token,
+                customerFirstName = initiateCustomerRegistrationCommand.firstName.value,
+                customerLastName = initiateCustomerRegistrationCommand.lastName.value,
+                customerEmail = initiateCustomerRegistrationCommand.email.value
               )
             )
             .flatTap {
@@ -80,8 +83,10 @@ class CustomerApplicationService @Inject() (
               case DomainEventPublicationStatus.NotPublished =>
                 IO.delay(logger.error("Could not publish initial customer registration event"))
             }
+            .map(_ => Right(()))
+        } else {
+          IO.pure(resultE)
         }
-        IO.pure(resultE)
       }
   }
 

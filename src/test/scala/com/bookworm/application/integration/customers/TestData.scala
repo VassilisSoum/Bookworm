@@ -50,6 +50,7 @@ trait TestData extends IntegrationTestModule {
     val transaction = for {
       _ <- sql"""truncate table bookworm.CUSTOMER CASCADE""".update.run
       _ <- sql"""truncate table bookworm.CUSTOMER_VERIFICATION_TOKEN CASCADE""".update.run
+      _ <- sql"""truncate table bookworm.email_template""".update.run
     } yield ()
 
     transaction.transact(this.synchronousTransactor).unsafeRunSync()

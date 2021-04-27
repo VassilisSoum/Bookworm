@@ -1,13 +1,15 @@
 package com.bookworm.application.customers.adapter.service
 
-import com.amazonaws.services.simpleemail.{AmazonSimpleEmailService, AmazonSimpleEmailServiceClientBuilder}
-import com.bookworm.application.config.Configuration.CustomerConfig
+import com.amazonaws.services.simpleemail.AmazonSimpleEmailService
+import com.bookworm.application.config.Configuration.{AwsConfig, CustomerConfig}
 import com.google.inject.{AbstractModule, Scopes}
 
 import scala.concurrent.ExecutionContext
 
 class CustomersApplicationServiceModule(
     customerConfig: CustomerConfig,
+    awsConfig: AwsConfig,
+    amazonSimpleEmailService: AmazonSimpleEmailService,
     executionContext: ExecutionContext
 ) extends AbstractModule {
 
@@ -16,13 +18,8 @@ class CustomersApplicationServiceModule(
     bind(classOf[CustomerVerificationTokenApplicationService]).in(Scopes.SINGLETON)
     bind(classOf[CustomerRegistrationVerificationEmailProducerService]).in(Scopes.SINGLETON)
     bind(classOf[CustomerConfig]).toInstance(customerConfig)
-    bind(classOf[ExecutionContext]).toInstance(executionContext)
-
-    val amazonSimpleEmailService: AmazonSimpleEmailService = AmazonSimpleEmailServiceClientBuilder
-      .standard()
-      .withRegion(customerConfig.customerRegistrationVerificationConfig.awsRegion)
-      .build()
-
+    bind(classOf[AwsConfig]).toInstance(awsConfig)
+    bind(classOf[ExecutionContext]).toInstance(executionContext) //TODO: Differentiate it that for supporting multiple execution contexts
     bind(classOf[AmazonSimpleEmailService]).toInstance(amazonSimpleEmailService)
   }
 }

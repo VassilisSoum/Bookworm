@@ -30,6 +30,7 @@ lazy val root = (project in file("."))
       "-language:existentials",
       "-language:postfixOps"
     ),
+    scalacOptions += "-target:jvm-1.8",
     assemblyJarName in assembly := "bookworm.jar",
     assemblyMergeStrategy in assembly := {
       case "application.conf" => MergeStrategy.concat
