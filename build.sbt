@@ -12,6 +12,7 @@ val Json4sVersion = "3.6.10"
 val CommonValidatorVersion = "1.7"
 val AwsJavaSDK = "1.11.1000"
 val GuavaVersion = "30.1.1-jre"
+val ElasticMQVersion = "1.1.0"
 
 lazy val root = (project in file("."))
   .settings(
@@ -59,6 +60,7 @@ lazy val root = (project in file("."))
       "com.amazonaws" % "aws-java-sdk-sns" % AwsJavaSDK,
       "com.amazonaws" % "aws-java-sdk-ses" % AwsJavaSDK,
       "com.google.guava" % "guava" % GuavaVersion,
+      "org.elasticmq" %% "elasticmq-rest-sqs" % ElasticMQVersion,
       "com.dimafeng" %% "testcontainers-scala-scalatest" % TestContainersVersion % Test,
       "com.dimafeng" %% "testcontainers-scala-postgresql" % TestContainersVersion % Test,
       "org.scalatest" %% "scalatest" % "3.0.8" % Test
