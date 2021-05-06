@@ -13,6 +13,9 @@ val CommonValidatorVersion = "1.7"
 val AwsJavaSDK = "1.11.1000"
 val GuavaVersion = "30.1.1-jre"
 val ElasticMQVersion = "1.1.0"
+val AkkaVersion = "2.6.13"
+val AkkaHttpVersion = "10.2.4"
+val AkkaStreamAlpakkaSQSVersion = "2.0.2"
 
 lazy val root = (project in file("."))
   .settings(
@@ -61,6 +64,9 @@ lazy val root = (project in file("."))
       "com.amazonaws" % "aws-java-sdk-ses" % AwsJavaSDK,
       "com.google.guava" % "guava" % GuavaVersion,
       "org.elasticmq" %% "elasticmq-rest-sqs" % ElasticMQVersion,
+      "com.lightbend.akka" %% "akka-stream-alpakka-sqs" % AkkaStreamAlpakkaSQSVersion,
+      "com.typesafe.akka" %% "akka-stream" % AkkaVersion,
+      "com.typesafe.akka" %% "akka-http" % AkkaHttpVersion,
       "com.dimafeng" %% "testcontainers-scala-scalatest" % TestContainersVersion % Test,
       "com.dimafeng" %% "testcontainers-scala-postgresql" % TestContainersVersion % Test,
       "org.scalatest" %% "scalatest" % "3.0.8" % Test
