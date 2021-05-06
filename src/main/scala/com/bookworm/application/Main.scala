@@ -3,7 +3,7 @@ package com.bookworm.application
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.syntax.semigroupk._
 import cats.{Monad, MonadError}
-import com.amazonaws.auth.EnvironmentVariableCredentialsProvider
+import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials, EnvironmentVariableCredentialsProvider}
 import com.amazonaws.services.simpleemail.{AmazonSimpleEmailService, AmazonSimpleEmailServiceClientBuilder}
 import com.bookworm.application.books.adapter.api.{AuthorRestApi, BookRestApi, BooksRestApiModule}
 import com.bookworm.application.books.adapter.repository.BookRepositoryModule
@@ -47,7 +47,11 @@ object Main extends IOApp {
         val amazonSimpleEmailService: AmazonSimpleEmailService = AmazonSimpleEmailServiceClientBuilder
           .standard()
           .withRegion(resources._2.aws.awsRegion)
-          .withCredentials(new EnvironmentVariableCredentialsProvider())
+          .withCredentials(
+            new AWSStaticCredentialsProvider(
+              new BasicAWSCredentials(resources._2.aws.awsAccessKey, resources._2.aws.awsSecretAccessKey)
+            )
+          )
           .build()
         val injector = Guice.createInjector(
           new Module(resources._1, java.time.Clock.systemUTC()),

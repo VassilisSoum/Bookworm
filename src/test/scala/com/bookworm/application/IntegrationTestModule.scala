@@ -50,7 +50,7 @@ abstract class IntegrationTestModule
       32
     )
   private val customerConfig: CustomerConfig = CustomerConfig(86400, customerRegistrationVerificationConfig)
-  private val awsConfig: AwsConfig = AwsConfig("us-east-2", "bookworm-ses-set")
+  private val awsConfig: AwsConfig = AwsConfig("us-east-2", "bookworm-ses-set", null, null)
 
   private val expiredVerificationTokensSchedulerConfig: ExpiredVerificationTokensSchedulerConfig =
     ExpiredVerificationTokensSchedulerConfig(enabled = false, periodInMillis = 1000L)

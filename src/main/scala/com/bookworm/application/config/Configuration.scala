@@ -17,7 +17,7 @@ object Configuration {
       threadPoolSize: Int
   )
 
-  case class AwsConfig(awsRegion: String, sesConfigurationSet: String)
+  case class AwsConfig(awsRegion: String, sesConfigurationSet: String, awsAccessKey: String, awsSecretAccessKey: String)
 
   case class CustomerConfig(
       verificationTokenExpirationInSeconds: Long,
