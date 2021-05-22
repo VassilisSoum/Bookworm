@@ -3,7 +3,7 @@ package com.bookworm.application.customers.adapter.publisher
 import cats.effect.IO
 import com.bookworm.application.customers.adapter.logger
 import com.bookworm.application.customers.adapter.service.CustomerRegistrationVerificationEmailProducerService
-import com.bookworm.application.customers.adapter.service.model.SendEmailVerificationServiceModel
+import com.bookworm.application.customers.adapter.service.model.EmailSendVerificationServiceModel
 import com.bookworm.application.customers.domain.model.event.{DomainEvent, DomainEventPublicationStatus, InitialCustomerRegistrationPendingEvent}
 
 import javax.inject.Inject
@@ -26,7 +26,7 @@ class DomainEventPublisher @Inject() (
           ) =>
         customerRegistrationVerificationEmailProducerService
           .sendRegistrationVerificationEmail(
-            SendEmailVerificationServiceModel(
+            EmailSendVerificationServiceModel(
               customerFirstName,
               customerLastName,
               customerEmail,

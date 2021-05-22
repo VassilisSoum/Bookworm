@@ -5,7 +5,7 @@ import cats.implicits._
 import com.bookworm.application.config.Configuration.CustomerConfig
 import com.bookworm.application.customers.adapter.logger
 import com.bookworm.application.customers.adapter.publisher.DomainEventPublisher
-import com.bookworm.application.customers.adapter.service.model.{CompleteCustomerRegistrationServiceModel, InitiateCustomerRegistrationServiceModel}
+import com.bookworm.application.customers.adapter.service.model.{CustomerCompetionRegistrationServiceModel, CustomerInitiationRegistrationServiceModel}
 import com.bookworm.application.customers.domain.model.event.{CompleteCustomerRegistrationFinishedEvent, DomainEventPublicationStatus, InitialCustomerRegistrationPendingEvent}
 import com.bookworm.application.customers.domain.model.{CustomerId, DomainBusinessError, VerificationToken}
 import com.bookworm.application.customers.domain.port.inbound.command.{CompleteCustomerRegistrationCommand, InitiateCustomerRegistrationCommand, SaveEmailVerificationTokenCommand}
@@ -18,7 +18,7 @@ import java.time.{Clock, LocalDateTime}
 import java.util.UUID
 import javax.inject.Inject
 
-class CustomerApplicationService @Inject() (
+class CustomerRegistrationApplicationService @Inject()(
     registerCustomerUseCase: RegisterCustomerUseCase[ConnectionIO],
     verificationTokenUseCase: VerificationTokenUseCase[ConnectionIO],
     retrieveCustomerDetailsUseCase: RetrieveCustomerDetailsUseCase[ConnectionIO],
@@ -29,7 +29,7 @@ class CustomerApplicationService @Inject() (
 ) {
 
   def initiateCustomerRegistration(
-    initiateCustomerRegistrationServiceModel: InitiateCustomerRegistrationServiceModel
+    initiateCustomerRegistrationServiceModel: CustomerInitiationRegistrationServiceModel
   ): IO[Either[DomainBusinessError, Unit]] = {
     val initiateCustomerRegistrationCommand = InitiateCustomerRegistrationCommand(
       initiateCustomerRegistrationServiceModel.id,
@@ -91,7 +91,7 @@ class CustomerApplicationService @Inject() (
   }
 
   def completeCustomerRegistration(
-    completeCustomerRegistrationServiceModel: CompleteCustomerRegistrationServiceModel
+    completeCustomerRegistrationServiceModel: CustomerCompetionRegistrationServiceModel
   ): IO[Either[DomainBusinessError, CustomerQueryModel]] = {
     val completeCustomerRegistrationCommand = CompleteCustomerRegistrationCommand(
       completeCustomerRegistrationServiceModel.verificationToken

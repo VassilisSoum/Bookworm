@@ -9,3 +9,8 @@ services:
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: Bookworm
+  redis:
+    image: redis:6.2.3
+    restart: always
+    ports:
+      - 6379:6379

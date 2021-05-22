@@ -7,7 +7,7 @@ import com.bookworm.application.books.adapter.api.BooksRestApiModule
 import com.bookworm.application.books.adapter.repository.BookRepositoryModule
 import com.bookworm.application.books.adapter.repository.dao.BooksDaoModule
 import com.bookworm.application.books.adapter.service.BooksApplicationServiceModule
-import com.bookworm.application.config.Configuration.{AwsConfig, CustomerConfig, CustomerRegistrationVerificationConfig, ExpiredVerificationTokensSchedulerConfig}
+import com.bookworm.application.config.Configuration.{AuthenticationTokensConfig, _}
 import com.bookworm.application.config.module.{BooksUseCasesModule, CustomersUseCasesModule}
 import com.bookworm.application.customers.adapter.api.CustomersRestApiModule
 import com.bookworm.application.customers.adapter.publisher.DomainEventPublisher
@@ -19,6 +19,8 @@ import com.bookworm.application.integration.FakeClock
 import com.bookworm.application.integration.customers.{CustomerTestModule, FakeDomainEventPublisher}
 import com.dimafeng.testcontainers.{Container, DockerComposeContainer, ExposedService, ForAllTestContainer}
 import com.google.inject._
+import dev.profunktor.redis4cats.connection.RedisClient
+import dev.profunktor.redis4cats.effect.Log.NoOp._
 import doobie.ExecutionContexts
 import doobie.util.transactor.Transactor
 import org.flywaydb.core.Flyway
@@ -42,6 +44,7 @@ abstract class IntegrationTestModule
   private val jdbcUrl: String = s"jdbc:postgresql://localhost:5432/$databaseName"
   private val username: String = "Bookworm"
   private val password: String = "password"
+  private val redisUrl = "redis://localhost"
 
   val customerRegistrationVerificationConfig: CustomerRegistrationVerificationConfig =
     CustomerRegistrationVerificationConfig(
@@ -51,6 +54,7 @@ abstract class IntegrationTestModule
     )
   private val customerConfig: CustomerConfig = CustomerConfig(86400, customerRegistrationVerificationConfig)
   private val awsConfig: AwsConfig = AwsConfig("us-east-2", "bookworm-ses-set")
+  private val authenticationTokensConfig: AuthenticationTokensConfig = AuthenticationTokensConfig(10, "secret-jwt-key")
 
   private val expiredVerificationTokensSchedulerConfig: ExpiredVerificationTokensSchedulerConfig =
     ExpiredVerificationTokensSchedulerConfig(enabled = false, periodInMillis = 1000L)
@@ -64,7 +68,10 @@ abstract class IntegrationTestModule
   val amazonSimpleEmailService: AmazonSimpleEmailService = mock[AmazonSimpleEmailService]
 
   override val container: Container =
-    DockerComposeContainer(new File("docker-compose.yml"), exposedServices = Seq(ExposedService("db", 5432)))
+    DockerComposeContainer(
+      new File("docker-compose.yml"),
+      exposedServices = Seq(ExposedService("db", 5432), ExposedService("redis", 6379))
+    )
 
   lazy val synchronousTransactor: Transactor[IO] = Transactor.fromDriverManager[IO](
     "org.postgresql.Driver",
@@ -74,10 +81,12 @@ abstract class IntegrationTestModule
     Blocker.liftExecutionContext(ExecutionContexts.synchronous)
   )
 
-  lazy val injector: Injector = wireDependencies(customerConfig, expiredVerificationTokensSchedulerConfig)
+  lazy val redisClient: (RedisClient, IO[Unit]) = RedisClient[IO].from(redisUrl).allocated.unsafeRunSync()
+
+  lazy val injector: Injector =
+    wireDependencies(customerConfig, expiredVerificationTokensSchedulerConfig, redisClient._1)
 
   override def beforeAll(): Unit = {
-
     fakeClock.current = LocalDateTime
       .of(2025, 2, 7, 10, 0, 0)
       .atZone(fakeClock.zoneId)
@@ -99,19 +108,23 @@ abstract class IntegrationTestModule
       }
       .unsafeRunSync()
 
+  override def beforeStop(): Unit =
+    redisClient._2.unsafeRunSync()
+
   private def wireDependencies(
     customerConfig: CustomerConfig,
-    expiredVerificationTokensSchedulerConfig: ExpiredVerificationTokensSchedulerConfig
+    expiredVerificationTokensSchedulerConfig: ExpiredVerificationTokensSchedulerConfig,
+    redisClient: RedisClient
   ): Injector =
     Guice.createInjector(
-      new Module(synchronousTransactor, fakeClock),
+      new Module(synchronousTransactor, redisClient, fakeClock),
       new BookRepositoryModule,
       new BooksRestApiModule,
       new CustomersRestApiModule,
       new BooksDaoModule,
       new BooksApplicationServiceModule,
       new BooksUseCasesModule,
-      new CustomersUseCasesModule,
+      new CustomersUseCasesModule(authenticationTokensConfig),
       new CustomerRepositoryModule,
       new CustomerTestModule(customerDomainEventPublisher),
       new CustomersApplicationServiceModule(

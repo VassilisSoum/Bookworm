@@ -6,7 +6,7 @@ import com.amazonaws.services.simpleemail.model._
 import com.bookworm.application.config.Configuration.{AwsConfig, CustomerConfig}
 import com.bookworm.application.customers.adapter.logger
 import com.bookworm.application.customers.adapter.service.CustomerRegistrationVerificationEmailProducerService.{customerFirstNameEmailField, customerLastNameEmailField, registrationVerificationLinkField}
-import com.bookworm.application.customers.adapter.service.model.SendEmailVerificationServiceModel
+import com.bookworm.application.customers.adapter.service.model.EmailSendVerificationServiceModel
 import com.bookworm.application.customers.domain.port.inbound.query.EmailTemplateQueryModel
 import com.bookworm.application.customers.domain.port.outbound.CustomerEmailTemplateRepository
 import doobie.implicits._
@@ -27,7 +27,7 @@ class CustomerRegistrationVerificationEmailProducerService @Inject() (
 )(implicit CS: ContextShift[IO]) {
 
   def sendRegistrationVerificationEmail(
-    sendEmailVerificationServiceModel: SendEmailVerificationServiceModel
+    sendEmailVerificationServiceModel: EmailSendVerificationServiceModel
   ): IO[Try[Unit]] = {
     val registrationVerificationEmailTemplateName =
       customerConfig.customerRegistrationVerificationConfig.registrationVerificationEmailTemplateName
@@ -67,8 +67,8 @@ class CustomerRegistrationVerificationEmailProducerService @Inject() (
   }
 
   private def constructEmailRequest(
-    sendEmailVerificationServiceModel: SendEmailVerificationServiceModel,
-    emailTemplateQueryModel: EmailTemplateQueryModel
+                                     sendEmailVerificationServiceModel: EmailSendVerificationServiceModel,
+                                     emailTemplateQueryModel: EmailTemplateQueryModel
   ): SendEmailRequest =
     new SendEmailRequest()
       .withDestination(

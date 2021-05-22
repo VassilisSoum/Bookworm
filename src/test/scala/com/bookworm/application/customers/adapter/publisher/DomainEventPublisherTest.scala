@@ -3,7 +3,7 @@ package com.bookworm.application.customers.adapter.publisher
 import cats.effect.IO
 import com.bookworm.application.AbstractUnitTest
 import com.bookworm.application.customers.adapter.service.CustomerRegistrationVerificationEmailProducerService
-import com.bookworm.application.customers.adapter.service.model.SendEmailVerificationServiceModel
+import com.bookworm.application.customers.adapter.service.model.EmailSendVerificationServiceModel
 import com.bookworm.application.customers.domain.model.event.{DomainEvent, DomainEventPublicationStatus, InitialCustomerRegistrationPendingEvent}
 
 import java.time.LocalDateTime
@@ -28,7 +28,7 @@ class DomainEventPublisherTest extends AbstractUnitTest {
         customerEmail.value
       )
 
-      val expectedSendEmailVerificationServiceModel = SendEmailVerificationServiceModel(
+      val expectedSendEmailVerificationServiceModel = EmailSendVerificationServiceModel(
         customerFirstName = pendingCustomerQueryModel.customerFirstName,
         customerLastName = pendingCustomerQueryModel.customerLastName,
         customerEmail = pendingCustomerQueryModel.customerEmail,

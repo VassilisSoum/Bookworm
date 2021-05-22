@@ -2,7 +2,7 @@ package com.bookworm.application.customers.adapter.service.model
 
 import com.bookworm.application.customers.domain.model.{CustomerAge, CustomerEmail, CustomerFirstName, CustomerId, CustomerLastName, CustomerPassword}
 
-case class InitiateCustomerRegistrationServiceModel(
+case class CustomerInitiationRegistrationServiceModel(
     id: CustomerId,
     firstName: CustomerFirstName,
     lastName: CustomerLastName,

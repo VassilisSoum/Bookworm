@@ -1,7 +1,7 @@
 package com.bookworm.application.customers.adapter.repository.dao
 
 import com.bookworm.application.customers.adapter.repository.dao.CustomerDao.encryptionAlgorithm
-import com.bookworm.application.customers.domain.model.{Customer, CustomerEmail, CustomerId, CustomerRegistrationStatus}
+import com.bookworm.application.customers.domain.model._
 import com.bookworm.application.customers.domain.port.inbound.query.CustomerQueryModel
 import doobie.Get
 import doobie.implicits._
@@ -29,6 +29,22 @@ class CustomerDao @Inject() (clock: Clock) {
           WHERE C.id = ${customerId.id}"""
       .query[CustomerQueryModel]
       .option
+
+  def getOptionalByCustomerEmailAndPassword(
+    customerEmail: CustomerEmail,
+    customerPassword: CustomerPassword,
+    includeOnlyVerifiedCustomer: Boolean = true
+  ): doobie.ConnectionIO[Option[CustomerQueryModel]] = {
+    val commonQuery =
+      fr"""SELECT C.id,C.firstName,C.lastName,C.username,C.age,C.registrationStatus FROM BOOKWORM.CUSTOMER C
+        | WHERE C.username = ${customerEmail.value} AND C.password = crypt(${customerPassword.value}, gen_salt($encryptionAlgorithm))""".stripMargin
+
+    (if (includeOnlyVerifiedCustomer) {
+       commonQuery ++ fr"AND C.registrationStatus = ${CustomerRegistrationStatus.Completed.toString}"
+     } else {
+       commonQuery
+     }).query[CustomerQueryModel].option
+  }
 
   def getOptionalByCustomerEmail(customerEmail: CustomerEmail): doobie.ConnectionIO[Option[CustomerQueryModel]] =
     fr"""SELECT C.id,C.firstName,C.lastName,C.username,C.age,C.registrationStatus FROM BOOKWORM.CUSTOMER C

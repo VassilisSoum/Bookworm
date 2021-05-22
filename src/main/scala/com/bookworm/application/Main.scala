@@ -20,6 +20,8 @@ import com.bookworm.application.customers.adapter.service.CustomersApplicationSe
 import com.bookworm.application.init.{DatabaseInit, ThreadPoolCreator}
 import com.google.common.util.concurrent.{AbstractScheduledService, Service}
 import com.google.inject._
+import dev.profunktor.redis4cats.connection.RedisClient
+import dev.profunktor.redis4cats.effect.Log.NoOp._
 import doobie.hikari.HikariTransactor
 import doobie.{ConnectionIO, Transactor}
 import net.codingwell.scalaguice.ScalaModule
@@ -43,21 +45,26 @@ object Main extends IOApp {
           .createFixedThreadPool(resources._2.customer.customerRegistrationVerificationConfig.threadPoolSize)
           .map(sesThreadPool => (resources._1, resources._2, sesThreadPool))
       )
-      .use { resources: (HikariTransactor[IO], Configuration.Config, ExecutionContext) =>
+      .flatMap(resources =>
+        RedisClient[IO]
+          .from(resources._2.redis.url)
+          .map(redisClient => (resources._1, resources._2, resources._3, redisClient))
+      )
+      .use { resources: (HikariTransactor[IO], Configuration.Config, ExecutionContext, RedisClient) =>
         val amazonSimpleEmailService: AmazonSimpleEmailService = AmazonSimpleEmailServiceClientBuilder
           .standard()
           .withRegion(resources._2.aws.awsRegion)
           .withCredentials(new EnvironmentVariableCredentialsProvider())
           .build()
         val injector = Guice.createInjector(
-          new Module(resources._1, java.time.Clock.systemUTC()),
+          new Module(resources._1, resources._4, java.time.Clock.systemUTC()),
           new BookRepositoryModule,
           new BooksRestApiModule,
           new CustomersRestApiModule,
           new BooksDaoModule,
           new BooksApplicationServiceModule,
           new BooksUseCasesModule,
-          new CustomersUseCasesModule,
+          new CustomersUseCasesModule(resources._2.authenticationTokensConfig),
           new CustomerRepositoryModule,
           new CustomersDomainEventPublisherModule,
           new CustomersApplicationServiceModule(
@@ -94,7 +101,9 @@ object Main extends IOApp {
         } yield exitCode
       }
 
-  class Module(transactor: Transactor[IO], clock: Clock) extends AbstractModule with ScalaModule {
+  class Module(transactor: Transactor[IO], redisClient: RedisClient, clock: Clock)
+    extends AbstractModule
+    with ScalaModule {
 
     import cats.effect._
 
@@ -107,6 +116,7 @@ object Main extends IOApp {
       bind(new TypeLiteral[ContextShift[IO]] {}).toInstance(implicitly(ContextShift[IO]))
       bind(new TypeLiteral[Transactor[IO]] {}).toInstance(transactor)
       bind(classOf[java.time.Clock]).toInstance(clock)
+      bind(classOf[RedisClient]).toInstance(redisClient)
     }
   }
 

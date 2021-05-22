@@ -1,7 +1,7 @@
 package com.bookworm.application.customers.adapter.api.dto
 
 import com.bookworm.application.customers.adapter.api.formats
-import com.bookworm.application.customers.adapter.service.model.CompleteCustomerRegistrationServiceModel
+import com.bookworm.application.customers.adapter.service.model.CustomerCompetionRegistrationServiceModel
 import com.bookworm.application.customers.domain.model.VerificationToken
 import org.json4s.{Extraction, JValue, JsonFormat}
 
@@ -9,8 +9,8 @@ import java.util.UUID
 
 case class CompleteCustomerRegistrationRequestDto(verificationToken: UUID) {
 
-  def toServiceModel: CompleteCustomerRegistrationServiceModel =
-    CompleteCustomerRegistrationServiceModel(VerificationToken(verificationToken))
+  def toServiceModel: CustomerCompetionRegistrationServiceModel =
+    CustomerCompetionRegistrationServiceModel(VerificationToken(verificationToken))
 }
 
 object CompleteCustomerRegistrationRequestDto {

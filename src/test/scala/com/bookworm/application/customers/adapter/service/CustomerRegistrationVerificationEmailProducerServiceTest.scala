@@ -2,7 +2,7 @@ package com.bookworm.application.customers.adapter.service
 
 import com.amazonaws.services.simpleemail.model.{SendEmailRequest, SendEmailResult}
 import com.bookworm.application.customers.adapter.repository.dao.EmailTemplateDao
-import com.bookworm.application.customers.adapter.service.model.SendEmailVerificationServiceModel
+import com.bookworm.application.customers.adapter.service.model.EmailSendVerificationServiceModel
 import com.bookworm.application.integration.customers.TestData
 
 import java.util.UUID
@@ -28,7 +28,7 @@ class CustomerRegistrationVerificationEmailProducerServiceTest extends TestData 
     "send a registration verification email" in {
       (amazonSimpleEmailService.sendEmail(_: SendEmailRequest)).expects(*).returns(sendEmailResult)
 
-      val sendEmailVerificationServiceModel = SendEmailVerificationServiceModel(
+      val sendEmailVerificationServiceModel = EmailSendVerificationServiceModel(
         customerFirstName = testCustomerFirstName.value,
         customerLastName = testCustomerLastName.value,
         customerEmail = testCustomerEmail.value,

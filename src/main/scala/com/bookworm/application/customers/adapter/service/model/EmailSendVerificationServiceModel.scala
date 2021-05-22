@@ -2,7 +2,7 @@ package com.bookworm.application.customers.adapter.service.model
 
 import java.util.UUID
 
-case class SendEmailVerificationServiceModel(
+case class EmailSendVerificationServiceModel(
     customerFirstName: String,
     customerLastName: String,
     customerEmail: String,

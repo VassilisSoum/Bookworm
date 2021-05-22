@@ -2,14 +2,14 @@ package com.bookworm.application.customers.adapter.api
 
 import cats.effect.IO
 import com.bookworm.application.customers.adapter.api.dto.{BusinessErrorDto, CompleteCustomerRegistrationRequestDto, CustomerRegistrationRequestDto, ValidationErrorDto}
-import com.bookworm.application.customers.adapter.service.CustomerApplicationService
+import com.bookworm.application.customers.adapter.service.CustomerRegistrationApplicationService
 import org.http4s.dsl.Http4sDsl
 import org.http4s.json4s.jackson.jsonOf
 import org.http4s.{EntityDecoder, HttpRoutes}
 
 import javax.inject.Inject
 
-class CustomerRegistrationRestApi @Inject() (customerApplicationService: CustomerApplicationService)
+class CustomerRegistrationRestApi @Inject() (customerApplicationService: CustomerRegistrationApplicationService)
   extends Http4sDsl[IO] {
 
   implicit private val customerRegistrationRequestDtoEntityDecoder: EntityDecoder[IO, CustomerRegistrationRequestDto] =

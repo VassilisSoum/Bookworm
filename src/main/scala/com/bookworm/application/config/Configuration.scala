@@ -26,16 +26,22 @@ object Configuration {
 
   case class ExpiredVerificationTokensSchedulerConfig(enabled: Boolean, periodInMillis: Long)
 
+  case class AuthenticationTokensConfig(expirationInSeconds: Int, jwtSecretKey: String)
+
+  case class RedisConfig(url: String)
+
   case class Config(
       server: ServerConfig,
       database: DatabaseConfig,
       customer: CustomerConfig,
       expiredVerificationTokensScheduler: ExpiredVerificationTokensSchedulerConfig,
-      aws: AwsConfig
+      authenticationTokensConfig: AuthenticationTokensConfig,
+      aws: AwsConfig,
+      redis: RedisConfig
   )
 
   def load(configFile: String = "application.conf")(implicit contextShift: ContextShift[IO]): Resource[IO, Config] =
     Blocker[IO].flatMap { blocker =>
-      Resource.liftF(ConfigSource.fromConfig(ConfigFactory.load(configFile)).loadF[IO, Config](blocker))
+      Resource.eval(ConfigSource.fromConfig(ConfigFactory.load(configFile)).loadF[IO, Config](blocker))
     }
 }

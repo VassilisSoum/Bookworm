@@ -1,7 +1,7 @@
 package com.bookworm.application.customers.domain.port.inbound
 
 import com.bookworm.application.AbstractUnitTest
-import com.bookworm.application.customers.domain.model.{CustomerRegistrationStatus, DomainBusinessError, VerificationToken}
+import com.bookworm.application.customers.domain.model.{CustomerId, CustomerRegistrationStatus, DomainBusinessError, VerificationToken}
 import com.bookworm.application.customers.domain.port.inbound.command.{CompleteCustomerRegistrationCommand, InitiateCustomerRegistrationCommand}
 import com.bookworm.application.customers.domain.port.outbound.{CustomerRepository, VerificationTokenRepository}
 
@@ -57,7 +57,7 @@ class RegisterCustomerUseCaseTest extends AbstractUnitTest {
         .returns(Success(Some(customerVerificationToken)))
         .once()
 
-      (customerRepository.findBy _).expects(customerId).returns(Success(Some(pendingCustomerQueryModel))).once()
+      (customerRepository.findBy(_: CustomerId)).expects(customerId).returns(Success(Some(pendingCustomerQueryModel))).once()
       (customerRepository.updateRegistrationStatus _)
         .expects(customerId, CustomerRegistrationStatus.Completed)
         .returns(Success(()))
@@ -78,7 +78,7 @@ class RegisterCustomerUseCaseTest extends AbstractUnitTest {
         )
         .once()
 
-      (customerRepository.findBy _).expects(*).never()
+      (customerRepository.findBy(_: CustomerId)).expects(*).never()
       (customerRepository.updateRegistrationStatus _).expects(*, *).never()
 
       registerCustomerUseCase
@@ -96,7 +96,7 @@ class RegisterCustomerUseCaseTest extends AbstractUnitTest {
         .returns(Success(None))
         .once()
 
-      (customerRepository.findBy _).expects(*).never()
+      (customerRepository.findBy(_: CustomerId)).expects(*).never()
       (customerRepository.updateRegistrationStatus _).expects(*, *).never()
 
       registerCustomerUseCase
@@ -114,7 +114,7 @@ class RegisterCustomerUseCaseTest extends AbstractUnitTest {
         .returns(Success(Some(customerVerificationToken)))
         .once()
 
-      (customerRepository.findBy _).expects(customerId).returns(Success(None)).once()
+      (customerRepository.findBy(_: CustomerId)).expects(customerId).returns(Success(None)).once()
       (customerRepository.updateRegistrationStatus _).expects(*, *).never()
 
       registerCustomerUseCase

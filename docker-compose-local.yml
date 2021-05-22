@@ -5,10 +5,16 @@ services:
     image: 308605260180.dkr.ecr.us-east-2.amazonaws.com/postgres:13.2
     restart: always
     ports:
-      - 5432:5432
+      - "5432:5432"
     environment:
       POSTGRES_PASSWORD: password
       POSTGRES_USER: Bookworm
+
+  redis:
+    image: redis:6.2.3
+    restart: always
+    ports:
+      - "6379:6379"
 
   bookworm:
     image: bookworm
@@ -17,6 +23,7 @@ services:
       - "9990:9990"
     depends_on:
       - db
+      - redis
     environment:
       DB_HOST: "db"
       SERVER_HOST: "0.0.0.0"

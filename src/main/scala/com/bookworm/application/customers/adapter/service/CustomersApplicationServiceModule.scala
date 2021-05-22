@@ -14,12 +14,15 @@ class CustomersApplicationServiceModule(
 ) extends AbstractModule {
 
   override def configure(): Unit = {
-    bind(classOf[CustomerApplicationService]).in(Scopes.SINGLETON)
+    bind(classOf[CustomerRegistrationApplicationService]).in(Scopes.SINGLETON)
     bind(classOf[CustomerVerificationTokenApplicationService]).in(Scopes.SINGLETON)
     bind(classOf[CustomerRegistrationVerificationEmailProducerService]).in(Scopes.SINGLETON)
+    bind(classOf[CustomerAuthenticationApplicationService]).in(Scopes.SINGLETON)
     bind(classOf[CustomerConfig]).toInstance(customerConfig)
     bind(classOf[AwsConfig]).toInstance(awsConfig)
-    bind(classOf[ExecutionContext]).toInstance(executionContext) //TODO: Differentiate it that for supporting multiple execution contexts
+    bind(classOf[ExecutionContext]).toInstance(
+      executionContext
+    ) //TODO: Differentiate it that for supporting multiple execution contexts
     bind(classOf[AmazonSimpleEmailService]).toInstance(amazonSimpleEmailService)
   }
 }
