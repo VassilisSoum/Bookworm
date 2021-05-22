@@ -1,5 +1,6 @@
 package com.bookworm.application
 
+import cats.arrow.FunctionK
 import cats.effect.{ExitCode, IO, IOApp}
 import cats.syntax.semigroupk._
 import cats.{Monad, MonadError}
@@ -65,7 +66,7 @@ object Main extends IOApp {
           new BooksApplicationServiceModule,
           new BooksUseCasesModule,
           new CustomersUseCasesModule(resources._2.authenticationTokensConfig),
-          new CustomerRepositoryModule,
+          new CustomerRepositoryModule(resources._2.authenticationTokensConfig),
           new CustomersDomainEventPublisherModule,
           new CustomersApplicationServiceModule(
             customerConfig = resources._2.customer,
@@ -108,6 +109,8 @@ object Main extends IOApp {
     import cats.effect._
 
     override def configure(): Unit = {
+      bind(new TypeLiteral[Monad[IO]] {}).toInstance(implicitly[Monad[IO]])
+      bind(new TypeLiteral[FunctionK[IO, ConnectionIO]] {}).toInstance(LiftIO.liftK[ConnectionIO])
       bind(new TypeLiteral[Monad[ConnectionIO]] {}).toInstance(implicitly[Monad[ConnectionIO]])
       bind(new TypeLiteral[MonadError[ConnectionIO, Throwable]] {})
         .toInstance(implicitly[MonadError[ConnectionIO, Throwable]])

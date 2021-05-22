@@ -1,12 +1,15 @@
 package com.bookworm.application.customers.adapter.repository
 
 import cats.effect.IO
+import com.bookworm.application.config.Configuration.AuthenticationTokensConfig
 import com.bookworm.application.customers.domain.port.outbound.{AuthenticationTokenRepository, CustomerEmailTemplateRepository, CustomerRepository, VerificationTokenRepository}
 import com.google.inject.{AbstractModule, Scopes, TypeLiteral}
 import doobie.ConnectionIO
 import net.codingwell.scalaguice.ScalaModule
 
-class CustomerRepositoryModule extends AbstractModule with ScalaModule {
+class CustomerRepositoryModule(authenticationTokensConfig: AuthenticationTokensConfig)
+  extends AbstractModule
+  with ScalaModule {
 
   override def configure(): Unit = {
     bind(new TypeLiteral[CustomerRepository[ConnectionIO]]() {})
@@ -24,5 +27,7 @@ class CustomerRepositoryModule extends AbstractModule with ScalaModule {
     bind(new TypeLiteral[AuthenticationTokenRepository[IO]]() {})
       .to(new TypeLiteral[AuthenticationTokenRepositoryImpl]() {})
       .in(Scopes.SINGLETON)
+
+    bind(classOf[AuthenticationTokensConfig]).toInstance(authenticationTokensConfig)
   }
 }

@@ -125,7 +125,7 @@ abstract class IntegrationTestModule
       new BooksApplicationServiceModule,
       new BooksUseCasesModule,
       new CustomersUseCasesModule(authenticationTokensConfig),
-      new CustomerRepositoryModule,
+      new CustomerRepositoryModule(authenticationTokensConfig),
       new CustomerTestModule(customerDomainEventPublisher),
       new CustomersApplicationServiceModule(
         customerConfig = customerConfig,

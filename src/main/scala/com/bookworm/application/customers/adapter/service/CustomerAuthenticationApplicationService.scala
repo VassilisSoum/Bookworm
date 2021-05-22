@@ -11,7 +11,7 @@ import doobie.{ConnectionIO, Transactor}
 import javax.inject.Inject
 
 class CustomerAuthenticationApplicationService @Inject() (
-    customerAuthenticationUseCase: CustomerAuthenticationUseCase[ConnectionIO],
+    customerAuthenticationUseCase: CustomerAuthenticationUseCase[IO, ConnectionIO],
     transactor: Transactor[IO]
 ) {
 
